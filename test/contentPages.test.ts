@@ -156,6 +156,19 @@ describe('BlogView component', () => {
     expect(html).toContain('Art\u00edculo no encontrado');
     expect(html).toContain('Volver a art\u00edculos');
   });
+
+  it('renders Productos Recomendados section in article view with Ver en Catálogo and Añadir a mi selección actions', () => {
+    const html = renderToString(
+      React.createElement(BlogView, {
+        posts: DEFAULT_POSTS,
+        selectedSlug: 'hola-soy-elizabeth',
+      })
+    );
+
+    expect(html).toContain('Productos Recomendados');
+    expect(html).toContain('Ver en Cat\u00e1logo');
+    expect(html).toContain('A\u00f1adir a mi selecci\u00f3n');
+  });
 });
 
 describe('App component navigation switching', () => {

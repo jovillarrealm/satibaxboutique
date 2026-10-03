@@ -73,7 +73,7 @@ describe('End-to-End Integration: Complete Customer & Admin Workflow', () => {
     setFallbackDb(db);
   });
 
-  it('verifies the full customer journey: catalog load -> filter -> detail -> cart -> WhatsApp -> admin mutations', async () => {
+  it('verifies the full customer journey: catalog load -> filter -> detail -> Item Selection -> WhatsApp -> admin mutations', async () => {
     // =========================================================================
     // STEP 1: CATALOG LOADING (The Cloudflare Data API Seam)
     // =========================================================================
@@ -205,7 +205,7 @@ describe('End-to-End Integration: Complete Customer & Admin Workflow', () => {
     expect(kitsHtml).toContain('Kits de Regalo');
 
     // =========================================================================
-    // STEP 4: ITEM SELECTION & CART STATE TRANSITIONS (Cart Engine Seam)
+    // STEP 4: ITEM SELECTION STATE TRANSITIONS (Item Selection Engine Seam)
     // =========================================================================
     let selection: ItemSelection = createEmptySelection();
     expect(selection.items).toHaveLength(0);

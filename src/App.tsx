@@ -40,9 +40,43 @@ export const App: React.FC<AppProps> = ({
   initialCategories = DEFAULT_CATEGORIES,
   initialNav = 'catalogo',
 }) => {
-  // Catalog state
-  const [products] = useState<Product[]>(initialProducts);
-  const [categories] = useState<Category[]>(initialCategories);
+  // Catalog state with live fetching from /api/products and /api/categories
+  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [categories, setCategories] = useState<Category[]>(initialCategories);
+
+  // Live catalog fetching from Cloudflare Pages API on mount (with offline fallback)
+  useEffect(() => {
+    let isMounted = true;
+    const fetchLiveCatalog = async () => {
+      try {
+        const [prodRes, catRes] = await Promise.all([
+          fetch('/api/products').catch(() => null),
+          fetch('/api/categories').catch(() => null),
+        ]);
+
+        if (prodRes && prodRes.ok) {
+          const liveProducts = await prodRes.json();
+          if (isMounted && Array.isArray(liveProducts) && liveProducts.length > 0) {
+            setProducts(liveProducts);
+          }
+        }
+
+        if (catRes && catRes.ok) {
+          const liveCategories = await catRes.json();
+          if (isMounted && Array.isArray(liveCategories) && liveCategories.length > 0) {
+            setCategories(liveCategories);
+          }
+        }
+      } catch {
+        // Retain fallback to initialProducts / DEFAULT_PRODUCTS
+      }
+    };
+
+    fetchLiveCatalog();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Filters state
   const [selectedCategory, setSelectedCategory] = useState<string>('todos');
@@ -339,6 +373,8 @@ export const App: React.FC<AppProps> = ({
             selectedSlug={selectedBlogSlug}
             onSelectPost={setSelectedBlogSlug}
             onNavigateCatalog={() => handleNavClick('catalogo')}
+            onAddToSelection={handleAddToSelection}
+            products={products}
           />
         )}
 

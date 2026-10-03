@@ -422,23 +422,41 @@ describe('Admin Dashboard & Cloudflare Functions API', () => {
       expect(res.email).toBe('elizabeth@satibax.com');
     });
 
-    it('authenticates via Bearer token', async () => {
+    it('authenticates via Bearer token with env.ADMIN_TOKEN', async () => {
       const { checkAdminAuth } = await import('../src/lib/adminAuth');
       const req = new Request('http://localhost/api/test', {
-        headers: { authorization: 'Bearer satibax-admin-secret-token' },
+        headers: { authorization: 'Bearer my-production-secret-token' },
       });
-      const res = checkAdminAuth(req);
+      const res = checkAdminAuth(req, { ADMIN_TOKEN: 'my-production-secret-token' });
       expect(res.authorized).toBe(true);
       expect(res.email).toBe('admin@satibax.com');
     });
 
-    it('authenticates via x-admin-token header', async () => {
+    it('authenticates via x-admin-token header with env.ADMIN_TOKEN', async () => {
       const { checkAdminAuth } = await import('../src/lib/adminAuth');
       const req = new Request('http://localhost/api/test', {
+        headers: { 'x-admin-token': 'my-production-secret-token' },
+      });
+      const res = checkAdminAuth(req, { ADMIN_TOKEN: 'my-production-secret-token' });
+      expect(res.authorized).toBe(true);
+    });
+
+    it('rejects removed hardcoded bypass tokens and backdoor headers', async () => {
+      const { checkAdminAuth } = await import('../src/lib/adminAuth');
+      const bypassReq1 = new Request('http://localhost/api/test', {
+        headers: { authorization: 'Bearer satibax-admin-secret-token' },
+      });
+      expect(checkAdminAuth(bypassReq1).authorized).toBe(false);
+
+      const bypassReq2 = new Request('http://localhost/api/test', {
         headers: { 'x-admin-token': 'admin-secret' },
       });
-      const res = checkAdminAuth(req);
-      expect(res.authorized).toBe(true);
+      expect(checkAdminAuth(bypassReq2).authorized).toBe(false);
+
+      const backdoorReq = new Request('http://localhost/api/test', {
+        headers: { 'x-admin-auth': 'true' },
+      });
+      expect(checkAdminAuth(backdoorReq).authorized).toBe(false);
     });
 
     it('authenticates via cookie session', async () => {
@@ -472,6 +490,34 @@ describe('Admin Dashboard & Cloudflare Functions API', () => {
       expect(formatted).toContain('35.000');
     });
 
+    it('calculates product stock indicators with badges', async () => {
+      const { getProductStock } = await import('../src/components/admin/ProductManagementTable');
+      
+      // Inactive product should be 'agotado'
+      const inactiveProduct: any = { id: 'p1', name: 'Serum', active: false, tags: [] };
+      expect(getProductStock(inactiveProduct)).toEqual({ status: 'agotado', count: 0 });
+
+      // Low stock product
+      const lowStockProduct: any = { id: 'p2', name: 'Crema', active: true, stock: 3, tags: [] };
+      expect(getProductStock(lowStockProduct)).toEqual({ status: 'poco', count: 3 });
+
+      // Available product
+      const availableProduct: any = { id: 'p3', name: 'Jabón', active: true, stock: 15, tags: [] };
+      expect(getProductStock(availableProduct)).toEqual({ status: 'disponible', count: 15 });
+    });
+
+    it('handles image fallback and SVG botanic placeholder', async () => {
+      const { resolveImageUrl, BOTANIC_PLACEHOLDER_SVG, handleImageError } = await import('../src/utils/imageFallback');
+      
+      expect(resolveImageUrl(null)).toBe(BOTANIC_PLACEHOLDER_SVG);
+      expect(resolveImageUrl('')).toBe(BOTANIC_PLACEHOLDER_SVG);
+      expect(resolveImageUrl('https://example.com/foto.jpg')).toBe('https://example.com/foto.jpg');
+
+      const mockImg = { src: 'https://broken-supabase.co/img.png', onerror: null as any };
+      handleImageError({ currentTarget: mockImg } as any);
+      expect(mockImg.src).toBe(BOTANIC_PLACEHOLDER_SVG);
+    });
+
     it('supports deleting a product in the database', async () => {
       const { deleteProduct, getProductById } = await import('../src/db/catalog');
       const productId = 'a60964b4-a6a0-446a-b3d7-3c1f82b34380';
@@ -483,6 +529,66 @@ describe('Admin Dashboard & Cloudflare Functions API', () => {
 
       const after = await getProductById(db, productId);
       expect(after).toBeNull();
+    });
+  });
+
+  describe('POST /api/upload Media Storage Endpoint', () => {
+    it('rejects unauthenticated media upload with 401', async () => {
+      const { onRequestPost: uploadMedia } = await import('../functions/api/upload');
+      const req = new Request('http://localhost/api/upload', {
+        method: 'POST',
+      });
+      const res = await uploadMedia({ request: req, env: mockEnv } as any);
+      expect(res.status).toBe(401);
+    });
+
+    it('rejects upload with non-multipart content-type', async () => {
+      const { onRequestPost: uploadMedia } = await import('../functions/api/upload');
+      const req = new Request('http://localhost/api/upload', {
+        method: 'POST',
+        headers: {
+          ...adminHeaders,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ file: 'not-a-file' }),
+      });
+      const res = await uploadMedia({ request: req, env: mockEnv } as any);
+      expect(res.status).toBe(400);
+    });
+
+    it('uploads media to R2 bucket when MEDIA_BUCKET is provided in env', async () => {
+      const { onRequestPost: uploadMedia } = await import('../functions/api/upload');
+      
+      const storedObjects: Record<string, any> = {};
+      const mockR2Bucket = {
+        put: async (key: string, data: any, opts: any) => {
+          storedObjects[key] = { data, opts };
+          return { key };
+        },
+      };
+
+      const formData = new FormData();
+      const dummyFile = new Blob(['image-binary-content'], { type: 'image/jpeg' });
+      formData.append('file', dummyFile, 'serum-botanico.jpg');
+
+      const req = new Request('http://localhost/api/upload', {
+        method: 'POST',
+        headers: {
+          ...adminHeaders,
+        },
+        body: formData,
+      });
+
+      const res = await uploadMedia({
+        request: req,
+        env: { ...mockEnv, MEDIA_BUCKET: mockR2Bucket },
+      } as any);
+
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(data.success).toBe(true);
+      expect(data.url).toMatch(/^\/media\/product-/);
+      expect(Object.keys(storedObjects).length).toBe(1);
     });
   });
 });

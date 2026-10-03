@@ -1,7 +1,7 @@
 /**
  * Satibax Boutique - Admin Authentication and Protected Route Helper
  *
- * Supports Cloudflare Access (Zero Trust) edge headers, Bearer tokens,
+ * Supports Cloudflare Access (Zero Trust) edge headers, environment Bearer tokens,
  * and client-side session management.
  */
 
@@ -21,6 +21,7 @@ const ADMIN_STORAGE_KEY = 'satibax_admin_session';
 
 /**
  * Server-side / Cloudflare Pages Function helper to verify admin access.
+ * Enforces Zero Trust edge verification and explicit environment secret tokens.
  */
 export function checkAdminAuth(
   request: Request,
@@ -32,7 +33,7 @@ export function checkAdminAuth(
     return { authorized: true, email: cfEmail.trim() };
   }
 
-  // 2. Token-based auth (Authorization Bearer or X-Admin-Token)
+  // 2. Token-based auth strictly validated against env.ADMIN_TOKEN (no hardcoded bypass tokens)
   const authHeader = request.headers.get('authorization');
   const customToken = request.headers.get('x-admin-token');
   const bearerToken = authHeader?.startsWith('Bearer ')
@@ -40,24 +41,11 @@ export function checkAdminAuth(
     : null;
   const token = bearerToken || customToken;
 
-  const validTokens = [
-    env?.ADMIN_TOKEN,
-    'satibax-admin-secret-token',
-    'admin-secret',
-    'satibax-access-2026',
-  ].filter(Boolean);
-
-  if (token && validTokens.includes(token)) {
+  if (env?.ADMIN_TOKEN && token && token === env.ADMIN_TOKEN) {
     return { authorized: true, email: 'admin@satibax.com' };
   }
 
-  // 3. Testing / Dev override header
-  const testAuth = request.headers.get('x-admin-auth');
-  if (testAuth === 'true' || testAuth === '1') {
-    return { authorized: true, email: 'admin-test@satibax.com' };
-  }
-
-  // 4. Session cookie fallback
+  // 3. Session cookie fallback (if active session exists from valid login)
   const cookieHeader = request.headers.get('cookie') || '';
   if (cookieHeader.includes('satibax_admin_session=active')) {
     return { authorized: true, email: 'admin@satibax.com' };
@@ -119,10 +107,9 @@ export function clearClientAdminSession(): void {
  */
 export function getAdminAuthHeaders(): Record<string, string> {
   const session = getClientAdminSession();
-  if (session.isAuthenticated) {
+  if (session.isAuthenticated && session.email) {
     return {
-      'x-admin-auth': 'true',
-      'cf-access-authenticated-user-email': session.email || 'admin@satibax.com',
+      'cf-access-authenticated-user-email': session.email,
     };
   }
   return {};

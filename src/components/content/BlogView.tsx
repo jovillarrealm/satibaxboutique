@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
-import type { BlogPost } from '../../db/catalog';
+import React, { useState, useEffect } from 'react';
+import type { BlogPost, Product } from '../../db/catalog';
 import { DEFAULT_POSTS } from '../../data/blogPosts';
+import { DEFAULT_PRODUCTS } from '../../data/initialCatalog';
+import { formatPriceARS } from '../../utils/catalogFiltering';
+import { handleImageError, BOTANIC_PLACEHOLDER_SVG } from '../../utils/imageFallback';
 import {
   Calendar,
   User,
@@ -9,13 +12,19 @@ import {
   BookOpen,
   Leaf,
   MessageCircle,
+  Sparkles,
+  Eye,
+  ShoppingBag,
+  Check,
 } from 'lucide-react';
 
 export interface BlogViewProps {
   posts?: BlogPost[];
+  products?: Product[];
   selectedSlug?: string | null;
   onSelectPost?: (slug: string | null) => void;
   onNavigateCatalog?: () => void;
+  onAddToSelection?: (product: Product, quantity?: number) => void;
 }
 
 function formatDate(dateStr: string): string {
@@ -32,14 +41,74 @@ function formatDate(dateStr: string): string {
 }
 
 export const BlogView: React.FC<BlogViewProps> = ({
-  posts = DEFAULT_POSTS,
+  posts: propPosts,
+  products: propProducts,
   selectedSlug: controlledSlug,
   onSelectPost,
   onNavigateCatalog,
+  onAddToSelection,
 }) => {
+  // Support live blog posts and products with fallbacks
+  const [posts, setPosts] = useState<BlogPost[]>(() =>
+    propPosts && propPosts.length > 0 ? propPosts : DEFAULT_POSTS
+  );
+  const [products, setProducts] = useState<Product[]>(() =>
+    propProducts && propProducts.length > 0 ? propProducts : DEFAULT_PRODUCTS
+  );
+
   // Support both controlled and uncontrolled slug state
   const [internalSlug, setInternalSlug] = useState<string | null>(null);
   const activeSlug = controlledSlug !== undefined ? controlledSlug : internalSlug;
+
+  // Interaction feedback
+  const [addedProductId, setAddedProductId] = useState<string | null>(null);
+
+  // Sync prop changes
+  useEffect(() => {
+    if (propPosts && propPosts.length > 0) {
+      setPosts(propPosts);
+    }
+  }, [propPosts]);
+
+  useEffect(() => {
+    if (propProducts && propProducts.length > 0) {
+      setProducts(propProducts);
+    }
+  }, [propProducts]);
+
+  // Live fetch from /api/blog and /api/products on mount (Storefront Live Catalog Fetching)
+  useEffect(() => {
+    let isMounted = true;
+    const fetchLiveContent = async () => {
+      try {
+        const [blogRes, prodRes] = await Promise.all([
+          fetch('/api/blog').catch(() => null),
+          fetch('/api/products').catch(() => null),
+        ]);
+
+        if (blogRes && blogRes.ok) {
+          const livePosts = await blogRes.json();
+          if (isMounted && Array.isArray(livePosts) && livePosts.length > 0) {
+            setPosts(livePosts);
+          }
+        }
+
+        if (prodRes && prodRes.ok) {
+          const liveProducts = await prodRes.json();
+          if (isMounted && Array.isArray(liveProducts) && liveProducts.length > 0) {
+            setProducts(liveProducts);
+          }
+        }
+      } catch {
+        // Fallback to offline constants
+      }
+    };
+
+    fetchLiveContent();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleSelect = (slug: string | null) => {
     if (onSelectPost) {
@@ -51,8 +120,76 @@ export const BlogView: React.FC<BlogViewProps> = ({
     }
   };
 
+  const handleViewInCatalog = () => {
+    if (onNavigateCatalog) {
+      onNavigateCatalog();
+    } else if (typeof window !== 'undefined') {
+      window.location.hash = '#catalogo';
+      const catElem = document.getElementById('catalogo');
+      if (catElem) {
+        catElem.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  };
+
+  const handleAddToSelection = (product: Product) => {
+    if (onAddToSelection) {
+      onAddToSelection(product, 1);
+    } else if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('satibax:add-to-selection', {
+          detail: { product, quantity: 1 },
+        })
+      );
+      window.dispatchEvent(new CustomEvent('satibax:open-selection'));
+    }
+    setAddedProductId(product.id);
+    setTimeout(() => setAddedProductId(null), 1500);
+  };
+
   // Find active post if a slug is selected
   const activePost = activeSlug ? posts.find((p) => p.slug === activeSlug) : null;
+
+  // Determine relevant recommended products for the current article
+  const getRecommendedProducts = (post: BlogPost): Product[] => {
+    const text = `${post.title} ${post.excerpt || ''} ${post.content}`.toLowerCase();
+
+    const matches = products.filter((p) => {
+      if (!p.active) return false;
+      const name = p.name.toLowerCase();
+      const tags = (p.tags || []).map((t) => t.toLowerCase());
+
+      if (text.includes('lavanda') && (name.includes('lavanda') || tags.includes('aroma'))) {
+        return true;
+      }
+      if (text.includes('facial') && (tags.includes('facial') || name.includes('facial') || name.includes('serum'))) {
+        return true;
+      }
+      if (text.includes('serum') && name.includes('serum')) {
+        return true;
+      }
+      if (text.includes('jabón') && name.includes('jabón')) {
+        return true;
+      }
+      if (text.includes('caléndula') && name.includes('caléndula')) {
+        return true;
+      }
+      if (text.includes('vegano') && tags.includes('vegano')) {
+        return true;
+      }
+      return false;
+    });
+
+    if (matches.length >= 3) {
+      return matches.slice(0, 3);
+    }
+
+    // Complement with active products or kits to always display 3 relevant cards
+    const remaining = products.filter(
+      (p) => p.active && !matches.some((m) => m.id === p.id)
+    );
+    return [...matches, ...remaining].slice(0, 3);
+  };
 
   // Render Full Post View
   if (activeSlug) {
@@ -99,7 +236,6 @@ export const BlogView: React.FC<BlogViewProps> = ({
           );
         }
 
-        // Subheadings like ## Heading
         if (trimmed.startsWith('## ')) {
           return (
             <h3
@@ -111,95 +247,167 @@ export const BlogView: React.FC<BlogViewProps> = ({
           );
         }
 
-        // List items
-        if (trimmed.startsWith('1. ') || trimmed.startsWith('- ') || trimmed.startsWith('• ')) {
-          const items = trimmed.split('\n');
+        // Blockquotes
+        if (trimmed.startsWith('> ')) {
           return (
-            <ul key={idx} className="my-4 space-y-2 list-none pl-2">
-              {items.map((item, itemIdx) => {
-                const cleanItem = item.replace(/^(\d+\.|\-|\•)\s*/, '');
-                return (
-                  <li key={itemIdx} className="flex items-start gap-2.5 text-base sm:text-lg text-[#3D4D45]/85 font-light leading-relaxed">
-                    <span className="w-2 h-2 rounded-full bg-[#8FA479] mt-2 flex-shrink-0" />
-                    <span>{cleanItem}</span>
-                  </li>
-                );
-              })}
-            </ul>
+            <blockquote
+              key={idx}
+              className="p-4 my-6 border-l-4 border-[#8FA479] bg-[#8FA479]/10 rounded-r-xl italic text-[#3D4D45]"
+            >
+              {trimmed.replace(/^>\s*/, '')}
+            </blockquote>
           );
         }
 
-        // Normal paragraph with line breaks
-        const lines = trimmed.split('\n');
+        // Regular paragraph
         return (
           <p
             key={idx}
             className="text-base sm:text-lg text-[#3D4D45]/85 font-light leading-relaxed my-4"
           >
-            {lines.map((line, lIdx) => (
-              <React.Fragment key={lIdx}>
-                {line}
-                {lIdx < lines.length - 1 && <br />}
-              </React.Fragment>
-            ))}
+            {trimmed}
           </p>
         );
       });
     };
 
+    const recommendedProducts = getRecommendedProducts(activePost);
+
     return (
-      <article className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16">
-        {/* Navigation Back */}
+      <article className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 animate-fadeIn">
+        {/* Navigation Breadcrumb */}
         <div className="mb-8">
           <button
             type="button"
             onClick={() => handleSelect(null)}
-            className="inline-flex items-center gap-2 text-sm font-medium text-[#3D4D45]/70 hover:text-[#3D4D45] transition-colors group"
+            className="inline-flex items-center gap-2 text-xs sm:text-sm font-medium text-[#3D4D45]/70 hover:text-[#3D4D45] transition-colors group"
           >
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
             <span>Volver a artículos</span>
           </button>
         </div>
 
-        {/* Article Header */}
-        <header className="mb-10 text-center sm:text-left border-b border-[#3D4D45]/10 pb-8">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#8FA479]/20 text-[#3D4D45] text-xs font-semibold uppercase tracking-wider mb-4">
+        {/* Editorial Article Header */}
+        <header className="mb-10 text-center sm:text-left">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#8FA479]/20 text-[#3D4D45] text-xs font-semibold uppercase tracking-wider mb-4">
             <Leaf className="w-3.5 h-3.5 text-[#8FA479]" />
-            <span>Reflexiones & Bienestar</span>
+            <span>Cuaderno Botánico Satibax</span>
           </div>
 
-          <h1 className="font-serif text-3xl sm:text-5xl font-bold text-[#3D4D45] leading-tight tracking-tight mb-4">
+          <h1 className="font-serif text-3xl sm:text-5xl font-bold text-[#3D4D45] leading-tight mb-4">
             {activePost.title}
           </h1>
 
-          <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 text-xs sm:text-sm text-[#3D4D45]/60 font-light">
-            <div className="inline-flex items-center gap-1.5">
-              <User className="w-4 h-4 text-[#8FA479]" />
-              <span>Elizabeth • Fundadora Satibax</span>
+          <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 text-xs sm:text-sm text-[#3D4D45]/60 border-y border-[#3D4D45]/10 py-3">
+            <div className="flex items-center gap-1.5">
+              <Calendar className="w-4 h-4 text-[#8FA479]" />
+              <time dateTime={activePost.created_at}>
+                {formatDate(activePost.created_at)}
+              </time>
             </div>
             <span>•</span>
-            <div className="inline-flex items-center gap-1.5">
-              <Calendar className="w-4 h-4 text-[#8FA479]" />
-              <time dateTime={activePost.created_at}>{formatDate(activePost.created_at)}</time>
+            <div className="flex items-center gap-1.5">
+              <User className="w-4 h-4 text-[#8FA479]" />
+              <span>Elizabeth • Creadora de Satibax</span>
             </div>
           </div>
         </header>
 
-        {/* Optional Cover Image */}
+        {/* Featured Cover Image if available */}
         {activePost.cover_image && (
-          <div className="mb-10 rounded-3xl overflow-hidden shadow-md max-h-[420px]">
+          <div className="mb-10 rounded-3xl overflow-hidden shadow-sm aspect-video w-full bg-[#8FA479]/10">
             <img
               src={activePost.cover_image}
               alt={activePost.title}
+              onError={handleImageError}
               className="w-full h-full object-cover"
             />
           </div>
         )}
 
-        {/* Body Content */}
+        {/* Article Body */}
         <div className="prose prose-lg max-w-none text-[#3D4D45] bg-white p-6 sm:p-10 rounded-3xl border border-[#3D4D45]/10 shadow-xs">
           {renderParagraphs(activePost.content)}
         </div>
+
+        {/* Related Product Links: Productos Recomendados Section */}
+        {recommendedProducts.length > 0 && (
+          <section className="mt-12 bg-white p-6 sm:p-8 rounded-3xl border border-[#3D4D45]/10 shadow-xs">
+            <div className="flex items-center justify-between mb-6 pb-4 border-b border-[#3D4D45]/10">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-[#8FA479]/20 flex items-center justify-center text-[#3D4D45]">
+                  <Sparkles className="w-5 h-5 text-[#8FA479]" />
+                </div>
+                <div>
+                  <h4 className="font-serif text-xl sm:text-2xl font-bold text-[#3D4D45]">
+                    Productos Recomendados
+                  </h4>
+                  <p className="text-xs text-[#3D4D45]/70 font-light">
+                    Fórmulas botánicas seleccionadas para acompañar los rituales de esta lectura.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+              {recommendedProducts.map((prod) => (
+                <div
+                  key={prod.id}
+                  className="bg-[#F9F7F2]/60 rounded-2xl border border-[#3D4D45]/10 p-4 flex flex-col justify-between hover:border-[#8FA479] hover:shadow-sm transition-all"
+                >
+                  <div>
+                    <div className="aspect-square w-full rounded-xl overflow-hidden bg-white mb-3 flex items-center justify-center">
+                      <img
+                        src={prod.image_url || BOTANIC_PLACEHOLDER_SVG}
+                        alt={prod.name}
+                        onError={handleImageError}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <h5 className="font-serif font-bold text-sm text-[#3D4D45] line-clamp-1 mb-1">
+                      {prod.name}
+                    </h5>
+                    <p className="text-xs text-[#8FA479] font-medium mb-1">
+                      {prod.brand || 'Satibax'}
+                    </p>
+                    <p className="text-sm font-bold text-[#3D4D45] mb-4">
+                      {formatPriceARS(prod.price)}
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col gap-2 pt-2 border-t border-[#3D4D45]/10">
+                    <button
+                      type="button"
+                      onClick={handleViewInCatalog}
+                      className="w-full py-2 px-3 bg-white hover:bg-white/80 text-[#3D4D45] font-semibold text-xs rounded-xl border border-[#3D4D45]/15 transition-all inline-flex items-center justify-center gap-1.5"
+                    >
+                      <Eye className="w-3.5 h-3.5 text-[#8FA479]" />
+                      <span>Ver en Catálogo</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleAddToSelection(prod)}
+                      className="w-full py-2 px-3 bg-[#3D4D45] hover:bg-[#2C3832] text-[#F9F7F2] font-semibold text-xs rounded-xl transition-all inline-flex items-center justify-center gap-1.5 shadow-xs"
+                    >
+                      {addedProductId === prod.id ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-[#8FA479]" />
+                          <span>¡Añadido!</span>
+                        </>
+                      ) : (
+                        <>
+                          <ShoppingBag className="w-3.5 h-3.5 text-[#8FA479]" />
+                          <span>Añadir a mi selección</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Article Footer & Call to Action */}
         <footer className="mt-12 p-6 sm:p-8 bg-[#8FA479]/15 rounded-3xl border border-[#8FA479]/30 flex flex-col sm:flex-row items-center justify-between gap-6">
@@ -215,11 +423,7 @@ export const BlogView: React.FC<BlogViewProps> = ({
           <div className="flex flex-wrap gap-3">
             <button
               type="button"
-              onClick={onNavigateCatalog || (() => {
-                if (typeof window !== 'undefined') {
-                  window.location.hash = '#catalogo';
-                }
-              })}
+              onClick={handleViewInCatalog}
               className="px-5 py-2.5 bg-[#3D4D45] hover:bg-[#553A49] text-[#F9F7F2] font-semibold text-xs sm:text-sm rounded-full transition-all shadow-sm inline-flex items-center gap-2"
             >
               <span>Ver Productos</span>
@@ -276,13 +480,16 @@ export const BlogView: React.FC<BlogViewProps> = ({
                     <img
                       src={post.cover_image}
                       alt={post.title}
+                      onError={handleImageError}
                       className="w-full h-full object-cover"
                     />
                   ) : (
                     <div className="flex flex-col items-center text-[#3D4D45]/50">
                       <Leaf className="w-10 h-10 text-[#8FA479] mb-1" />
                       <span className="text-[11px] font-medium uppercase tracking-widest text-[#3D4D45]/60">
-                        {post.slug === 'hola-soy-elizabeth' ? 'Historia Fundacional' : 'Cuidado Botánico'}
+                        {post.slug === 'hola-soy-elizabeth'
+                          ? 'Historia Fundacional'
+                          : 'Cuidado Botánico'}
                       </span>
                     </div>
                   )}
