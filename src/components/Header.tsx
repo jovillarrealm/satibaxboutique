@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShoppingBag, Sparkles, Menu, X, Leaf } from 'lucide-react';
+import { ShoppingBag, Sparkles, Menu, X } from 'lucide-react';
 
 export interface HeaderProps {
   itemCount?: number;
@@ -63,12 +63,12 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={(e) => handleLinkClick('catalogo', e)}
               className="group inline-flex items-center gap-2.5 transition-opacity hover:opacity-90"
             >
-              <div className="w-10 h-10 rounded-full bg-[#8FA479]/20 flex items-center justify-center text-[#3D4D45] group-hover:scale-105 transition-transform duration-200">
-                <Leaf className="w-5 h-5 text-[#3D4D45]" />
+              <div className="w-10 h-10 rounded-full overflow-hidden border border-[#3D4D45]/15 flex items-center justify-center group-hover:scale-105 transition-transform duration-200 bg-white shadow-xs">
+                <img src="/logo.jpeg" alt="Satibax Boutique" className="w-full h-full object-cover" />
               </div>
               <div>
                 <h1 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-[#3D4D45] leading-tight">
-                  Satibax Boutique
+                  Satibax Boutique<span className="text-[#8FA479]">.</span>
                 </h1>
                 <p className="text-[11px] sm:text-xs uppercase tracking-widest text-[#8FA479] font-medium -mt-0.5">
                   Cosmética Natural y Bienestar

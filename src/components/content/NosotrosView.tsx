@@ -66,6 +66,20 @@ export const NosotrosView: React.FC<NosotrosViewProps> = ({
 
   return (
     <div className="w-full">
+      {/* Top Cover Banner */}
+      <div className="relative h-[45vh] min-h-[320px] w-full overflow-hidden bg-[#3D4D45]">
+        <img
+          src="/assets/nosotros-cover.jpg"
+          alt="Taller Satibax Boutique"
+          className="w-full h-full object-cover object-center opacity-80"
+        />
+        <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+          <h1 className="font-serif text-4xl sm:text-6xl text-white font-bold tracking-wide drop-shadow-md text-center px-4">
+            Nuestra Esencia
+          </h1>
+        </div>
+      </div>
+
       {/* Hero Section */}
       <section className="relative overflow-hidden py-16 sm:py-24 bg-gradient-to-b from-[#F9F7F2] via-white/80 to-[#F9F7F2] border-b border-[#3D4D45]/10">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">

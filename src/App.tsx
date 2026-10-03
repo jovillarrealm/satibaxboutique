@@ -27,7 +27,7 @@ import {
 } from './domain/itemSelection';
 import { ItemSelectionDrawer } from './components/ItemSelectionDrawer';
 import { FloatingWhatsAppButton } from './components/FloatingWhatsAppButton';
-import { Sparkles, Gift, Heart, ArrowRight } from 'lucide-react';
+import { Sparkles, Gift, Heart } from 'lucide-react';
 
 export interface AppProps {
   initialProducts?: Product[];
@@ -247,40 +247,92 @@ export const App: React.FC<AppProps> = ({
         {/* View 1: Catalog & Kits */}
         {(activeNav === 'catalogo' || activeNav === 'kits') && (
           <>
-            {/* Hero Botanical Banner */}
-            <section className="relative overflow-hidden py-12 sm:py-16 bg-gradient-to-b from-[#F9F7F2] via-white/50 to-[#F9F7F2] border-b border-[#3D4D45]/10">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#8FA479]/15 text-[#3D4D45] text-xs font-semibold uppercase tracking-wider mb-4">
-                  <Sparkles className="w-3.5 h-3.5 text-[#8FA479]" />
-                  <span>Ingredientes Botánicos & Amor Consciente</span>
-                </div>
+            {/* Hero Section with Full-Bleed Cover Image */}
+            <section className="relative h-[85vh] min-h-[580px] w-full flex items-center justify-center overflow-hidden bg-[#3D4D45]">
+              <div className="absolute inset-0 z-0">
+                <img
+                  src="/assets/hero-cover.jpg"
+                  alt="Fondo natural hojas verdes Satibax"
+                  className="w-full h-full object-cover object-center opacity-80"
+                />
+                <div className="absolute inset-0 bg-black/40" />
+              </div>
 
-                <h2 className="font-serif text-3xl sm:text-5xl lg:text-6xl font-bold text-[#3D4D45] tracking-tight max-w-3xl mx-auto leading-tight">
-                  Cuidado natural para tu piel y bienestar diario
-                </h2>
+              <div className="relative z-10 text-center px-4 max-w-4xl mx-auto flex flex-col items-center">
+                <span className="inline-block px-4 py-1.5 rounded-full bg-white/20 backdrop-blur-sm text-xs md:text-sm font-semibold tracking-wider uppercase mb-6 border border-white/30 text-white animate-pulse">
+                  Bienestar Natural
+                </span>
 
-                <p className="mt-4 text-base sm:text-lg text-[#3D4D45]/80 max-w-2xl mx-auto font-light leading-relaxed">
-                  Descubrí nuestra selección artesanal de cosmética vegetal, serums terapéuticos, jabones botánicos y aromaterapia pura.
+                <h1 className="font-serif text-4xl sm:text-6xl md:text-7xl font-bold text-white mb-6 leading-tight drop-shadow-md">
+                  Cosmética Natural, Aromas y Regalos con Intención
+                </h1>
+
+                <p className="text-white/90 text-base sm:text-xl md:text-2xl font-light mb-8 max-w-2xl mx-auto drop-shadow leading-relaxed">
+                  Descubre el poder de la naturaleza en tu rutina diaria. Cuidado natural para tu piel y bienestar diario. Productos artesanales, libres de tóxicos y creados con amor.
                 </p>
 
-                {/* Quick Kits Promo Link */}
-                <div className="mt-6 flex flex-wrap justify-center gap-3">
+                <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto justify-center">
                   <button
                     type="button"
                     onClick={() => {
-                      setKitOnly(!kitOnly);
-                      if (!kitOnly) setSelectedCategory('todos');
+                      setKitOnly(false);
+                      const el = document.getElementById('catalogo');
+                      if (el) el.scrollIntoView({ behavior: 'smooth' });
                     }}
-                    className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs sm:text-sm font-semibold transition-all duration-200 shadow-sm ${
-                      kitOnly
-                        ? 'bg-[#553A49] text-[#F9F7F2]'
-                        : 'bg-white text-[#3D4D45] hover:bg-[#8FA479]/15 border border-[#3D4D45]/15'
-                    }`}
+                    className="bg-white text-[#3D4D45] px-8 py-4 rounded-full font-bold text-sm md:text-base hover:bg-[#8FA479] hover:text-white transition-all duration-300 shadow-lg flex items-center justify-center gap-2 hover:shadow-xl hover:scale-105 active:scale-95 cursor-pointer"
+                  >
+                    Comprar Ahora
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setKitOnly(true);
+                      setSelectedCategory('todos');
+                      const el = document.getElementById('kits') || document.getElementById('catalogo');
+                      if (el) el.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    className="bg-transparent border-2 border-white text-white px-8 py-4 rounded-full font-bold text-sm md:text-base hover:bg-white/10 transition-all duration-300 flex items-center justify-center gap-2 hover:shadow-lg hover:scale-105 active:scale-95 cursor-pointer"
                   >
                     <Gift className="w-4 h-4 text-[#8FA479]" />
-                    <span>{kitOnly ? 'Mostrando sólo Kits de Regalo' : 'Explorar Kits de Regalo'}</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
+                    Ver Regalos
                   </button>
+                </div>
+              </div>
+            </section>
+
+            {/* 4 Pillars Value Props Section */}
+            <section className="py-16 sm:py-20 bg-[#F9F7F2] border-b border-[#3D4D45]/10">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 text-center">
+                  <div className="flex flex-col items-center space-y-3 p-6 rounded-2xl bg-white/70 shadow-xs border border-[#3D4D45]/5 hover:shadow-md transition-shadow">
+                    <div className="text-4xl sm:text-5xl mb-2">💚</div>
+                    <h3 className="font-serif text-lg sm:text-xl font-bold text-[#3D4D45]">100% Natural</h3>
+                    <p className="text-[#3D4D45]/80 leading-relaxed text-xs sm:text-sm">
+                      Ingredientes orgánicos seleccionados sin parabenos, sulfatos ni conservantes artificiales.
+                    </p>
+                  </div>
+                  <div className="flex flex-col items-center space-y-3 p-6 rounded-2xl bg-white/70 shadow-xs border border-[#3D4D45]/5 hover:shadow-md transition-shadow">
+                    <div className="text-4xl sm:text-5xl mb-2">🌱</div>
+                    <h3 className="font-serif text-lg sm:text-xl font-bold text-[#3D4D45]">Cruelty Free</h3>
+                    <p className="text-[#3D4D45]/80 leading-relaxed text-xs sm:text-sm">
+                      Amamos a los animales. Ninguno de nuestros productos o insumos es testado en ellos.
+                    </p>
+                  </div>
+                  <div className="flex flex-col items-center space-y-3 p-6 rounded-2xl bg-white/70 shadow-xs border border-[#3D4D45]/5 hover:shadow-md transition-shadow">
+                    <div className="text-4xl sm:text-5xl mb-2">♻️</div>
+                    <h3 className="font-serif text-lg sm:text-xl font-bold text-[#3D4D45]">Eco-Friendly</h3>
+                    <p className="text-[#3D4D45]/80 leading-relaxed text-xs sm:text-sm">
+                      Packaging libre de plásticos y biodegradable. Cuidamos el impacto en cada envío.
+                    </p>
+                  </div>
+                  <div className="flex flex-col items-center space-y-3 p-6 rounded-2xl bg-white/70 shadow-xs border border-[#3D4D45]/5 hover:shadow-md transition-shadow">
+                    <div className="text-4xl sm:text-5xl mb-2">🌾</div>
+                    <h3 className="font-serif text-lg sm:text-xl font-bold text-[#3D4D45]">Sin Gluten</h3>
+                    <p className="text-[#3D4D45]/80 leading-relaxed text-xs sm:text-sm">
+                      Productos seguros para celíacos. Todos nuestros items están certificados gluten-free.
+                    </p>
+                  </div>
                 </div>
               </div>
             </section>
@@ -529,7 +581,7 @@ export const App: React.FC<AppProps> = ({
       />
 
       {/* Persistent Floating WhatsApp Action Button */}
-      <FloatingWhatsAppButton />
+      {!isDrawerOpen && <FloatingWhatsAppButton />}
     </div>
   );
 };
