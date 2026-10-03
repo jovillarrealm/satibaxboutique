@@ -10,10 +10,10 @@ export interface Product {
   name: string;
   slug?: string;
   price: number;
-  brand?: string;
-  description?: string;
-  category_id?: string;
-  image_url?: string;
+  brand?: string | null;
+  description?: string | null;
+  category_id?: string | null;
+  image_url?: string | null;
   images?: string[];
   tags?: string[];
   is_new?: boolean;
