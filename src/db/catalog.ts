@@ -416,3 +416,279 @@ export async function getSubscribers(db: DbInput): Promise<Subscriber[]> {
     created_at: r.created_at,
   }));
 }
+
+/**
+ * Utility to convert title/name to a URL-friendly slug.
+ */
+export function slugify(text: string): string {
+  return text
+    .toString()
+    .toLowerCase()
+    .trim()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
+}
+
+export interface CreateProductInput {
+  name: string;
+  price: number;
+  slug?: string;
+  description?: string | null;
+  brand?: string | null;
+  category_id?: string | null;
+  image_url?: string | null;
+  images?: string[];
+  tags?: string[];
+  is_new?: boolean;
+  bestseller?: boolean;
+  active?: boolean;
+}
+
+/**
+ * Creates a new product in the catalog.
+ */
+export async function createProduct(db: DbInput, input: CreateProductInput): Promise<Product> {
+  const client = asDatabaseClient(db);
+  const id = crypto.randomUUID();
+  const slug = input.slug?.trim() || slugify(input.name);
+  const images = input.images || (input.image_url ? [input.image_url] : []);
+  const tags = input.tags || [];
+  const imageUrl = input.image_url || images[0] || null;
+  const createdAt = new Date().toISOString();
+
+  await client.execute(
+    `INSERT INTO products (
+      id, name, slug, description, brand, price, category_id,
+      image_url, images, tags, is_new, bestseller, active, created_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      id,
+      input.name.trim(),
+      slug,
+      input.description ?? null,
+      input.brand ?? null,
+      Number(input.price),
+      input.category_id ?? null,
+      imageUrl,
+      JSON.stringify(images),
+      JSON.stringify(tags),
+      input.is_new ? 1 : 0,
+      input.bestseller ? 1 : 0,
+      input.active !== false ? 1 : 0,
+      createdAt,
+    ]
+  );
+
+  const product = await getProductById(db, id);
+  if (!product) {
+    throw new Error('Failed to create product');
+  }
+  return product;
+}
+
+export interface UpdateProductInput {
+  name?: string;
+  slug?: string;
+  description?: string | null;
+  brand?: string | null;
+  price?: number;
+  category_id?: string | null;
+  image_url?: string | null;
+  images?: string[];
+  tags?: string[];
+  is_new?: boolean;
+  bestseller?: boolean;
+  active?: boolean;
+}
+
+/**
+ * Updates an existing product.
+ */
+export async function updateProduct(db: DbInput, id: string, updates: UpdateProductInput): Promise<Product | null> {
+  const client = asDatabaseClient(db);
+  const existing = await getProductById(db, id);
+  if (!existing) {
+    return null;
+  }
+
+  const setClauses: string[] = [];
+  const params: unknown[] = [];
+
+  if (updates.name !== undefined) {
+    setClauses.push('name = ?');
+    params.push(updates.name.trim());
+  }
+  if (updates.slug !== undefined) {
+    setClauses.push('slug = ?');
+    params.push(updates.slug.trim());
+  }
+  if (updates.description !== undefined) {
+    setClauses.push('description = ?');
+    params.push(updates.description);
+  }
+  if (updates.brand !== undefined) {
+    setClauses.push('brand = ?');
+    params.push(updates.brand);
+  }
+  if (updates.price !== undefined) {
+    setClauses.push('price = ?');
+    params.push(Number(updates.price));
+  }
+  if (updates.category_id !== undefined) {
+    setClauses.push('category_id = ?');
+    params.push(updates.category_id);
+  }
+  if (updates.image_url !== undefined) {
+    setClauses.push('image_url = ?');
+    params.push(updates.image_url);
+  }
+  if (updates.images !== undefined) {
+    setClauses.push('images = ?');
+    params.push(JSON.stringify(updates.images));
+  }
+  if (updates.tags !== undefined) {
+    setClauses.push('tags = ?');
+    params.push(JSON.stringify(updates.tags));
+  }
+  if (updates.is_new !== undefined) {
+    setClauses.push('is_new = ?');
+    params.push(updates.is_new ? 1 : 0);
+  }
+  if (updates.bestseller !== undefined) {
+    setClauses.push('bestseller = ?');
+    params.push(updates.bestseller ? 1 : 0);
+  }
+  if (updates.active !== undefined) {
+    setClauses.push('active = ?');
+    params.push(updates.active ? 1 : 0);
+  }
+
+  if (setClauses.length === 0) {
+    return existing;
+  }
+
+  params.push(id);
+  await client.execute(`UPDATE products SET ${setClauses.join(', ')} WHERE id = ?`, params);
+
+  return getProductById(db, id);
+}
+
+/**
+ * Deletes a product by ID.
+ */
+export async function deleteProduct(db: DbInput, id: string): Promise<boolean> {
+  const client = asDatabaseClient(db);
+  const res = await client.execute('DELETE FROM products WHERE id = ?', [id]);
+  return (res.changes || 0) > 0;
+}
+
+/**
+ * Retrieves a single blog post by its ID.
+ */
+export async function getBlogPostById(db: DbInput, id: string): Promise<BlogPost | null> {
+  const client = asDatabaseClient(db);
+  const row = await client.queryFirst<any>('SELECT * FROM blog_posts WHERE id = ? LIMIT 1', [id]);
+  return row ? mapBlogPostRow(row) : null;
+}
+
+export interface CreateBlogPostInput {
+  title: string;
+  content: string;
+  slug?: string;
+  excerpt?: string | null;
+  cover_image?: string | null;
+  published?: boolean;
+}
+
+/**
+ * Creates a new blog post.
+ */
+export async function createBlogPost(db: DbInput, input: CreateBlogPostInput): Promise<BlogPost> {
+  const client = asDatabaseClient(db);
+  const id = crypto.randomUUID();
+  const slug = input.slug?.trim() || slugify(input.title);
+  const createdAt = new Date().toISOString();
+
+  await client.execute(
+    `INSERT INTO blog_posts (
+      id, title, slug, excerpt, content, cover_image, published, created_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      id,
+      input.title.trim(),
+      slug,
+      input.excerpt ?? null,
+      input.content,
+      input.cover_image ?? null,
+      input.published !== false ? 1 : 0,
+      createdAt,
+    ]
+  );
+
+  const post = await getBlogPostById(db, id);
+  if (!post) {
+    throw new Error('Failed to create blog post');
+  }
+  return post;
+}
+
+export interface UpdateBlogPostInput {
+  title?: string;
+  slug?: string;
+  excerpt?: string | null;
+  content?: string;
+  cover_image?: string | null;
+  published?: boolean;
+}
+
+/**
+ * Updates an existing blog post.
+ */
+export async function updateBlogPost(db: DbInput, id: string, updates: UpdateBlogPostInput): Promise<BlogPost | null> {
+  const client = asDatabaseClient(db);
+  const existing = await getBlogPostById(db, id);
+  if (!existing) {
+    return null;
+  }
+
+  const setClauses: string[] = [];
+  const params: unknown[] = [];
+
+  if (updates.title !== undefined) {
+    setClauses.push('title = ?');
+    params.push(updates.title.trim());
+  }
+  if (updates.slug !== undefined) {
+    setClauses.push('slug = ?');
+    params.push(updates.slug.trim());
+  }
+  if (updates.excerpt !== undefined) {
+    setClauses.push('excerpt = ?');
+    params.push(updates.excerpt);
+  }
+  if (updates.content !== undefined) {
+    setClauses.push('content = ?');
+    params.push(updates.content);
+  }
+  if (updates.cover_image !== undefined) {
+    setClauses.push('cover_image = ?');
+    params.push(updates.cover_image);
+  }
+  if (updates.published !== undefined) {
+    setClauses.push('published = ?');
+    params.push(updates.published ? 1 : 0);
+  }
+
+  if (setClauses.length === 0) {
+    return existing;
+  }
+
+  params.push(id);
+  await client.execute(`UPDATE blog_posts SET ${setClauses.join(', ')} WHERE id = ?`, params);
+
+  return getBlogPostById(db, id);
+}
+
