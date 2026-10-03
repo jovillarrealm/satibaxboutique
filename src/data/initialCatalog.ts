@@ -1,4 +1,5 @@
 import type { Product, Category } from "../db/catalog";
+export { DEFAULT_POSTS } from "./blogPosts";
 
 export const DEFAULT_CATEGORIES: Category[] = [
   {
