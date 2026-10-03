@@ -7,6 +7,8 @@ import { CategoryFilter } from './components/CategoryFilter';
 import { TagFilter } from './components/TagFilter';
 import { SearchBar } from './components/SearchBar';
 import { ProductGrid } from './components/ProductGrid';
+import { ProductDetailModal } from './components/ProductDetailModal';
+import { KitsSection } from './components/KitsSection';
 import {
   NosotrosView,
   BlogView,
@@ -49,6 +51,9 @@ export const App: React.FC<AppProps> = ({
   const [activeNav, setActiveNav] = useState<string>(initialNav);
   const [selectedBlogSlug, setSelectedBlogSlug] = useState<string | null>(null);
 
+  // Product Detail Modal state
+  const [selectedProductForDetail, setSelectedProductForDetail] = useState<Product | null>(null);
+
   // Item Selection state persisted to localStorage using domain engine
   const [selection, setSelection] = useState<ItemSelection>(() => {
     return loadSelectionFromStorage();
@@ -73,9 +78,14 @@ export const App: React.FC<AppProps> = ({
     }
   }, []);
 
-  // Handle adding product to selection
-  const handleAddToSelection = (product: Product) => {
-    setSelection((prev) => addItem(prev, product));
+  // Handle adding product to selection with quantity
+  const handleAddToSelection = (product: Product, quantity: number = 1) => {
+    setSelection((prev) => addItem(prev, product, quantity));
+  };
+
+  // Open detail modal for product
+  const handleViewDetails = (product: Product) => {
+    setSelectedProductForDetail(product);
   };
 
   // Handle updating product quantity
@@ -115,10 +125,21 @@ export const App: React.FC<AppProps> = ({
   const handleNavClick = (navId: string) => {
     setActiveNav(navId);
     if (navId === 'kits') {
-      setKitOnly(true);
-      setSelectedCategory('todos');
+      setKitOnly(false);
+      if (typeof document !== 'undefined') {
+        const kitsElem = document.getElementById('kits');
+        if (kitsElem) {
+          kitsElem.scrollIntoView({ behavior: 'smooth' });
+        }
+      }
     } else if (navId === 'catalogo') {
       setKitOnly(false);
+      if (typeof document !== 'undefined') {
+        const catElem = document.getElementById('catalogo');
+        if (catElem) {
+          catElem.scrollIntoView({ behavior: 'smooth' });
+        }
+      }
     }
     if (navId !== 'blog') {
       setSelectedBlogSlug(null);
@@ -192,6 +213,14 @@ export const App: React.FC<AppProps> = ({
               </div>
             </section>
 
+            {/* Curated Gift Kits Editorial Section */}
+            <KitsSection
+              id="kits"
+              products={products}
+              onAddToSelection={handleAddToSelection}
+              onViewDetails={handleViewDetails}
+            />
+
             {/* Main Catalog Section */}
             <main id="catalogo" className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
               {/* Controls Container */}
@@ -251,6 +280,7 @@ export const App: React.FC<AppProps> = ({
               <ProductGrid
                 products={filteredProducts}
                 onAddToSelection={handleAddToSelection}
+                onViewDetails={handleViewDetails}
                 onClearFilters={handleClearFilters}
               />
             </main>
@@ -395,6 +425,14 @@ export const App: React.FC<AppProps> = ({
           </div>
         </div>
       </footer>
+
+      {/* Product Detail Modal */}
+      <ProductDetailModal
+        product={selectedProductForDetail}
+        isOpen={Boolean(selectedProductForDetail)}
+        onClose={() => setSelectedProductForDetail(null)}
+        onAddToSelection={handleAddToSelection}
+      />
 
       {/* Slide-over Item Selection Drawer */}
       <ItemSelectionDrawer
