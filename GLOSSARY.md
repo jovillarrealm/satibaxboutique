@@ -27,3 +27,11 @@ _Avoid_: Webmaster, developer, system administrator
 **Subscriber**:
 A visitor who submits their email address to receive newsletters and boutique promotions.
 _Avoid_: Lead, user, customer account
+
+**Dark Mode**:
+The botanical dark visual theme for the storefront using deep organic charcoal/forest background tones and sage green accents.
+_Avoid_: Inverted mode, high contrast mode
+
+**Wishlist**:
+The collection of products favorited by a visitor and stored locally in their browser session.
+_Avoid_: Bookmarks, saved searches, registry
