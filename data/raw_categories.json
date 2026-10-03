@@ -1,0 +1,26 @@
+[
+  {
+    "id": "5830755b-43b1-4ef9-93aa-aa337a263bfd",
+    "name": "Natural",
+    "parent_id": null,
+    "created_at": "2026-01-19T12:40:56.93683-05:00"
+  },
+  {
+    "id": "3f4af2e7-1348-4d62-99f0-4f1bc17152c2",
+    "name": "Vegano",
+    "parent_id": null,
+    "created_at": "2026-01-19T13:31:55.234446-05:00"
+  },
+  {
+    "id": "a789a2b5-95e2-4d4b-80f8-c68e620cbb5a",
+    "name": "Jabones",
+    "parent_id": "5830755b-43b1-4ef9-93aa-aa337a263bfd",
+    "created_at": "2026-01-19T13:32:09.489131-05:00"
+  },
+  {
+    "id": "61f5cfdd-8cdd-4c34-88db-060efef554a7",
+    "name": "skincare",
+    "parent_id": "3f4af2e7-1348-4d62-99f0-4f1bc17152c2",
+    "created_at": "2026-01-19T13:48:51.554473-05:00"
+  }
+]
