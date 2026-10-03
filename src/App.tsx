@@ -11,8 +11,13 @@ import {
   loadSelectionFromStorage,
   saveSelectionToStorage,
   addItem,
+  updateQuantity,
+  removeItem,
+  clearSelection,
   type ItemSelection,
 } from './domain/itemSelection';
+import { ItemSelectionDrawer } from './components/ItemSelectionDrawer';
+import { FloatingWhatsAppButton } from './components/FloatingWhatsAppButton';
 import { Sparkles, Gift, Heart, ArrowRight } from 'lucide-react';
 
 export interface AppProps {
@@ -40,14 +45,43 @@ export const App: React.FC<AppProps> = ({
     return loadSelectionFromStorage();
   });
 
+  // Drawer slide-over open/closed state
+  const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false);
+
   // Sync selection to localStorage
   useEffect(() => {
     saveSelectionToStorage(selection);
   }, [selection]);
 
+  // Support global custom event for opening selection drawer
+  useEffect(() => {
+    const handleOpenDrawer = () => setIsDrawerOpen(true);
+    if (typeof window !== 'undefined') {
+      window.addEventListener('satibax:open-selection', handleOpenDrawer);
+      return () => {
+        window.removeEventListener('satibax:open-selection', handleOpenDrawer);
+      };
+    }
+  }, []);
+
   // Handle adding product to selection
   const handleAddToSelection = (product: Product) => {
     setSelection((prev) => addItem(prev, product));
+  };
+
+  // Handle updating product quantity
+  const handleUpdateQuantity = (productId: string, quantity: number) => {
+    setSelection((prev) => updateQuantity(prev, productId, quantity));
+  };
+
+  // Handle removing product from selection
+  const handleRemoveItem = (productId: string) => {
+    setSelection((prev) => removeItem(prev, productId));
+  };
+
+  // Handle clearing entire selection
+  const handleClearSelection = () => {
+    setSelection(clearSelection());
   };
 
   // Toggle tag filter
@@ -97,13 +131,7 @@ export const App: React.FC<AppProps> = ({
         itemCount={selection.totalItems}
         activeNav={activeNav}
         onNavClick={handleNavClick}
-        onOpenSelection={() => {
-          // Open Item Selection drawer event / handler
-          if (typeof window !== 'undefined') {
-            const drawerEvt = new CustomEvent('satibax:open-selection');
-            window.dispatchEvent(drawerEvt);
-          }
-        }}
+        onOpenSelection={() => setIsDrawerOpen(true)}
       />
 
       {/* Hero Botanical Banner */}
@@ -256,6 +284,19 @@ export const App: React.FC<AppProps> = ({
           </div>
         </div>
       </footer>
+
+      {/* Slide-over Item Selection Drawer */}
+      <ItemSelectionDrawer
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        selection={selection}
+        onUpdateQuantity={handleUpdateQuantity}
+        onRemoveItem={handleRemoveItem}
+        onClearSelection={handleClearSelection}
+      />
+
+      {/* Persistent Floating WhatsApp Action Button */}
+      <FloatingWhatsAppButton />
     </div>
   );
 };
