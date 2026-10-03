@@ -15,6 +15,7 @@ import {
   ContactoView,
   NewsletterSubscription,
 } from './components/content';
+import { AdminDashboard } from './components/admin';
 import {
   loadSelectionFromStorage,
   saveSelectionToStorage,
@@ -48,8 +49,28 @@ export const App: React.FC<AppProps> = ({
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [kitOnly, setKitOnly] = useState<boolean>(initialNav === 'kits');
-  const [activeNav, setActiveNav] = useState<string>(initialNav);
+  const [activeNav, setActiveNav] = useState<string>(() => {
+    if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
+      return 'admin';
+    }
+    return initialNav;
+  });
   const [selectedBlogSlug, setSelectedBlogSlug] = useState<string | null>(null);
+
+  // Sync navigation on browser back/forward buttons
+  useEffect(() => {
+    const handlePopState = () => {
+      if (typeof window !== 'undefined') {
+        if (window.location.pathname.startsWith('/admin')) {
+          setActiveNav('admin');
+        } else {
+          setActiveNav('catalogo');
+        }
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   // Product Detail Modal state
   const [selectedProductForDetail, setSelectedProductForDetail] = useState<Product | null>(null);
@@ -124,6 +145,12 @@ export const App: React.FC<AppProps> = ({
   // Handle nav clicks
   const handleNavClick = (navId: string) => {
     setActiveNav(navId);
+    if (typeof window !== 'undefined' && window.history?.pushState) {
+      const targetPath = navId === 'admin' ? '/admin' : '/';
+      if (window.location.pathname !== targetPath) {
+        window.history.pushState({}, '', targetPath);
+      }
+    }
     if (navId === 'kits') {
       setKitOnly(false);
       if (typeof document !== 'undefined') {
@@ -159,6 +186,17 @@ export const App: React.FC<AppProps> = ({
       activeOnly: true,
     });
   }, [products, selectedCategory, selectedTags, searchQuery, kitOnly]);
+
+  // Dedicated Admin Dashboard View (routed via /admin or footer link)
+  if (activeNav === 'admin') {
+    return (
+      <AdminDashboard
+        onViewStorefront={() => {
+          handleNavClick('catalogo');
+        }}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#F9F7F2] text-[#3D4D45] flex flex-col font-sans selection:bg-[#8FA479]/30">
@@ -377,6 +415,16 @@ export const App: React.FC<AppProps> = ({
                     className="hover:text-[#8FA479] transition-colors"
                   >
                     Contacto & Ubicación
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => handleNavClick('admin')}
+                    className="hover:text-[#8FA479] transition-colors text-xs text-[#F9F7F2]/40"
+                    title="Acceso administrativo"
+                  >
+                    Panel Admin
                   </button>
                 </li>
               </ul>

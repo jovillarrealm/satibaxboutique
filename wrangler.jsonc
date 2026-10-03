@@ -1,0 +1,39 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "satibax-boutique",
+  "compatibility_date": "2026-10-01",
+  "pages_build_output_dir": "dist",
+
+  /**
+   * D1 Database Binding
+   * Provides serverless SQLite relational storage for the 74-product catalog,
+   * categories, blog posts, and newsletter subscribers.
+   */
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "satibax-db",
+      "database_id": "satibax-production-d1-database-id",
+      "migrations_dir": "migrations"
+    }
+  ],
+
+  /**
+   * R2 Storage Bucket Binding
+   * Provides persistent cloud object storage for administrative product photo uploads,
+   * with zero egress fees and automated edge CDN distribution.
+   */
+  "r2_buckets": [
+    {
+      "binding": "MEDIA_BUCKET",
+      "bucket_name": "satibax-media"
+    }
+  ],
+
+  /**
+   * Compatibility flags for optimal edge performance & Web standard APIs
+   */
+  "compatibility_flags": [
+    "nodejs_compat"
+  ]
+}
