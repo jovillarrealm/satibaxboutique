@@ -8,12 +8,12 @@ import { TagFilter } from './components/TagFilter';
 import { SearchBar } from './components/SearchBar';
 import { ProductGrid } from './components/ProductGrid';
 import { ProductDetailModal } from './components/ProductDetailModal';
-import { KitsSection } from './components/KitsSection';
 import {
   NosotrosView,
   BlogView,
   ContactoView,
   NewsletterSubscription,
+  InicioView,
 } from './components/content';
 import { AdminDashboard } from './components/admin';
 import {
@@ -38,7 +38,7 @@ export interface AppProps {
 export const App: React.FC<AppProps> = ({
   initialProducts = DEFAULT_PRODUCTS,
   initialCategories = DEFAULT_CATEGORIES,
-  initialNav = 'catalogo',
+  initialNav = 'inicio',
 }) => {
   // Catalog state with live fetching from /api/products and /api/categories
   const [products, setProducts] = useState<Product[]>(initialProducts);
@@ -178,31 +178,25 @@ export const App: React.FC<AppProps> = ({
 
   // Handle nav clicks
   const handleNavClick = (navId: string) => {
-    setActiveNav(navId);
+    let targetNav = navId;
+    if (navId === 'catalogo') {
+      targetNav = 'tienda';
+      setKitOnly(false);
+    } else if (navId === 'kits') {
+      targetNav = 'tienda';
+      setKitOnly(true);
+      setSelectedCategory('todos');
+    } else if (navId === 'tienda') {
+      setKitOnly(false);
+    }
+    setActiveNav(targetNav);
     if (typeof window !== 'undefined' && window.history?.pushState) {
-      const targetPath = navId === 'admin' ? '/admin' : '/';
+      const targetPath = targetNav === 'admin' ? '/admin' : '/';
       if (window.location.pathname !== targetPath) {
         window.history.pushState({}, '', targetPath);
       }
     }
-    if (navId === 'kits') {
-      setKitOnly(false);
-      if (typeof document !== 'undefined') {
-        const kitsElem = document.getElementById('kits');
-        if (kitsElem) {
-          kitsElem.scrollIntoView({ behavior: 'smooth' });
-        }
-      }
-    } else if (navId === 'catalogo') {
-      setKitOnly(false);
-      if (typeof document !== 'undefined') {
-        const catElem = document.getElementById('catalogo');
-        if (catElem) {
-          catElem.scrollIntoView({ behavior: 'smooth' });
-        }
-      }
-    }
-    if (navId !== 'blog') {
+    if (targetNav !== 'blog') {
       setSelectedBlogSlug(null);
     }
     if (typeof window !== 'undefined') {
@@ -244,106 +238,69 @@ export const App: React.FC<AppProps> = ({
 
       {/* Main Content Area */}
       <div className="flex-1">
-        {/* View 1: Catalog & Kits */}
-        {(activeNav === 'catalogo' || activeNav === 'kits') && (
+        {/* View 1: Inicio (Branded Editorial Homepage with Hero Cover, Pillars, Destacados & Reviews) */}
+        {activeNav === 'inicio' && (
+          <InicioView
+            products={products}
+            onNavigateTienda={(options) => {
+              setActiveNav('tienda');
+              if (options?.kitOnly) {
+                setKitOnly(true);
+                setSelectedCategory('todos');
+              } else {
+                setKitOnly(false);
+                if (options?.category) {
+                  setSelectedCategory(options.category);
+                }
+              }
+              if (typeof window !== 'undefined') {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }
+            }}
+            onAddToSelection={handleAddToSelection}
+            onViewDetails={handleViewDetails}
+          />
+        )}
+
+        {/* View 2: Tienda & Catálogo (Dedicated Shopping View WITHOUT Hero Cover Image) */}
+        {(activeNav === 'tienda' || activeNav === 'catalogo' || activeNav === 'kits') && (
           <>
-            {/* Hero Section with Full-Bleed Cover Image */}
-            <section className="relative h-[85vh] min-h-[580px] w-full flex items-center justify-center overflow-hidden bg-[#3D4D45]">
-              <div className="absolute inset-0 z-0">
-                <img
-                  src="/assets/hero-cover.jpg"
-                  alt="Fondo natural hojas verdes Satibax"
-                  className="w-full h-full object-cover object-center opacity-80"
-                />
-                <div className="absolute inset-0 bg-black/40" />
-              </div>
-
-              <div className="relative z-10 text-center px-4 max-w-4xl mx-auto flex flex-col items-center">
-                <span className="inline-block px-4 py-1.5 rounded-full bg-white/20 backdrop-blur-sm text-xs md:text-sm font-semibold tracking-wider uppercase mb-6 border border-white/30 text-white animate-pulse">
-                  Bienestar Natural
-                </span>
-
-                <h1 className="font-serif text-4xl sm:text-6xl md:text-7xl font-bold text-white mb-6 leading-tight drop-shadow-md">
-                  Cosmética Natural, Aromas y Regalos con Intención
-                </h1>
-
-                <p className="text-white/90 text-base sm:text-xl md:text-2xl font-light mb-8 max-w-2xl mx-auto drop-shadow leading-relaxed">
-                  Descubre el poder de la naturaleza en tu rutina diaria. Cuidado natural para tu piel y bienestar diario. Productos artesanales, libres de tóxicos y creados con amor.
-                </p>
-
-                <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto justify-center">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setKitOnly(false);
-                      const el = document.getElementById('catalogo');
-                      if (el) el.scrollIntoView({ behavior: 'smooth' });
-                    }}
-                    className="bg-white text-[#3D4D45] px-8 py-4 rounded-full font-bold text-sm md:text-base hover:bg-[#8FA479] hover:text-white transition-all duration-300 shadow-lg flex items-center justify-center gap-2 hover:shadow-xl hover:scale-105 active:scale-95 cursor-pointer"
-                  >
-                    Comprar Ahora
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setKitOnly(true);
-                      setSelectedCategory('todos');
-                      const el = document.getElementById('kits') || document.getElementById('catalogo');
-                      if (el) el.scrollIntoView({ behavior: 'smooth' });
-                    }}
-                    className="bg-transparent border-2 border-white text-white px-8 py-4 rounded-full font-bold text-sm md:text-base hover:bg-white/10 transition-all duration-300 flex items-center justify-center gap-2 hover:shadow-lg hover:scale-105 active:scale-95 cursor-pointer"
-                  >
-                    <Gift className="w-4 h-4 text-[#8FA479]" />
-                    Ver Regalos
-                  </button>
-                </div>
-              </div>
-            </section>
-
-            {/* 4 Pillars Value Props Section */}
-            <section className="py-16 sm:py-20 bg-[#F9F7F2] border-b border-[#3D4D45]/10">
+            <section className="bg-[#F9F7F2] py-8 sm:py-10 border-b border-[#3D4D45]/10">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 text-center">
-                  <div className="flex flex-col items-center space-y-3 p-6 rounded-2xl bg-white/70 shadow-xs border border-[#3D4D45]/5 hover:shadow-md transition-shadow">
-                    <div className="text-4xl sm:text-5xl mb-2">💚</div>
-                    <h3 className="font-serif text-lg sm:text-xl font-bold text-[#3D4D45]">100% Natural</h3>
-                    <p className="text-[#3D4D45]/80 leading-relaxed text-xs sm:text-sm">
-                      Ingredientes orgánicos seleccionados sin parabenos, sulfatos ni conservantes artificiales.
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                  <div>
+                    <span className="text-[#8FA479] font-bold text-xs uppercase tracking-widest">
+                      Tienda Botánica
+                    </span>
+                    <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#3D4D45] mt-1">
+                      Tienda &amp; Catálogo Completo
+                    </h2>
+                    <p className="mt-2 text-sm sm:text-base text-[#3D4D45]/80 font-light max-w-2xl">
+                      Cuidado natural para tu piel y bienestar diario. Cosmética consciente, extractos puros y combinaciones botánicas.
                     </p>
                   </div>
-                  <div className="flex flex-col items-center space-y-3 p-6 rounded-2xl bg-white/70 shadow-xs border border-[#3D4D45]/5 hover:shadow-md transition-shadow">
-                    <div className="text-4xl sm:text-5xl mb-2">🌱</div>
-                    <h3 className="font-serif text-lg sm:text-xl font-bold text-[#3D4D45]">Cruelty Free</h3>
-                    <p className="text-[#3D4D45]/80 leading-relaxed text-xs sm:text-sm">
-                      Amamos a los animales. Ninguno de nuestros productos o insumos es testado en ellos.
-                    </p>
-                  </div>
-                  <div className="flex flex-col items-center space-y-3 p-6 rounded-2xl bg-white/70 shadow-xs border border-[#3D4D45]/5 hover:shadow-md transition-shadow">
-                    <div className="text-4xl sm:text-5xl mb-2">♻️</div>
-                    <h3 className="font-serif text-lg sm:text-xl font-bold text-[#3D4D45]">Eco-Friendly</h3>
-                    <p className="text-[#3D4D45]/80 leading-relaxed text-xs sm:text-sm">
-                      Packaging libre de plásticos y biodegradable. Cuidamos el impacto en cada envío.
-                    </p>
-                  </div>
-                  <div className="flex flex-col items-center space-y-3 p-6 rounded-2xl bg-white/70 shadow-xs border border-[#3D4D45]/5 hover:shadow-md transition-shadow">
-                    <div className="text-4xl sm:text-5xl mb-2">🌾</div>
-                    <h3 className="font-serif text-lg sm:text-xl font-bold text-[#3D4D45]">Sin Gluten</h3>
-                    <p className="text-[#3D4D45]/80 leading-relaxed text-xs sm:text-sm">
-                      Productos seguros para celíacos. Todos nuestros items están certificados gluten-free.
-                    </p>
+
+                  {/* Quick Kits Promo Toggle */}
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setKitOnly(!kitOnly);
+                        if (!kitOnly) setSelectedCategory('todos');
+                      }}
+                      className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all duration-200 cursor-pointer shadow-xs ${
+                        kitOnly
+                          ? 'bg-[#553A49] text-[#F9F7F2] shadow-sm'
+                          : 'bg-white text-[#3D4D45] hover:bg-[#8FA479]/15 border border-[#3D4D45]/15'
+                      }`}
+                    >
+                      <Gift className="w-4 h-4 text-[#8FA479]" />
+                      <span>{kitOnly ? 'Mostrando sólo Kits de Regalo' : '🎁 Ver Kits de Regalo'}</span>
+                    </button>
                   </div>
                 </div>
               </div>
             </section>
-
-            {/* Curated Gift Kits Editorial Section */}
-            <KitsSection
-              id="kits"
-              products={products}
-              onAddToSelection={handleAddToSelection}
-              onViewDetails={handleViewDetails}
-            />
 
             {/* Main Catalog Section */}
             <main id="catalogo" className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
@@ -438,10 +395,12 @@ export const App: React.FC<AppProps> = ({
         )}
       </div>
 
-      {/* Community Newsletter Subscription Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
-        <NewsletterSubscription />
-      </section>
+      {/* Community Newsletter Subscription Section (rendered on views other than Inicio) */}
+      {activeNav !== 'inicio' && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
+          <NewsletterSubscription />
+        </section>
+      )}
 
       {/* Botanical Footer */}
       <footer className="bg-[#3D4D45] text-[#F9F7F2] border-t border-[#3D4D45]/20 mt-8">

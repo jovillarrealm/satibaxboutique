@@ -250,7 +250,7 @@ describe('formatPriceARS', () => {
 });
 
 describe('Header component', () => {
-  it('renders botanical title, subtitle, navigation, and selection trigger', () => {
+  it('renders botanical title, subtitle, right-aligned navigation, and selection trigger', () => {
     const html = renderToString(
       React.createElement(Header, {
         itemCount: 3,
@@ -260,9 +260,8 @@ describe('Header component', () => {
 
     expect(html).toContain('Satibax Boutique');
     expect(html).toContain('Cosm\u00e9tica Natural y Bienestar');
-    expect(html).toContain('Cat\u00e1logo');
-    expect(html).toContain('Kits');
-    expect(html).toContain('Nosotros');
+    expect(html).toContain('Tienda');
+    expect(html).toContain('Sobre Satibax');
     expect(html).toContain('Blog');
     expect(html).toContain('Contacto');
     expect(html).toContain('3'); // selection badge count
@@ -379,11 +378,12 @@ describe('ProductGrid component', () => {
 });
 
 describe('App component', () => {
-  it('renders full catalog view with loaded products', () => {
+  it('renders full catalog view with loaded products when initialNav is tienda', () => {
     const html = renderToString(
       React.createElement(App, {
         initialProducts: MOCK_PRODUCTS,
         initialCategories: MOCK_CATEGORIES,
+        initialNav: 'tienda',
       })
     );
 
@@ -391,5 +391,19 @@ describe('App component', () => {
     expect(html).toContain('Cosm\u00e9tica Natural y Bienestar');
     expect(html).toContain('Serum Facial Retinol Night Repair');
     expect(html).toContain('Desodorante Piedra Alumbre');
+  });
+
+  it('renders dedicated Inicio view with hero cover, 4 pillars and reviews by default', () => {
+    const html = renderToString(
+      React.createElement(App, {
+        initialProducts: MOCK_PRODUCTS,
+        initialCategories: MOCK_CATEGORIES,
+      })
+    );
+
+    expect(html).toContain('Cosm\u00e9tica Natural, Aromas y Regalos con Intenci\u00f3n');
+    expect(html).toContain('100% Natural');
+    expect(html).toContain('Cruelty Free');
+    expect(html).toContain('Lo que dicen quienes nos eligen');
   });
 });
