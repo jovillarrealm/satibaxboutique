@@ -5,30 +5,21 @@
   "pages_build_output_dir": "dist",
 
   /**
-   * D1 Database Binding
-   * Provides serverless SQLite relational storage for the 74-product catalog,
-   * categories, blog posts, and newsletter subscribers.
+   * D1 Database Binding & R2 Bucket Binding
+   * In Cloudflare Pages, configure bindings directly in the dashboard under:
+   * Settings > Functions > D1 Database Bindings (Variable name: DB)
+   * Settings > Functions > R2 Bucket Bindings (Variable name: MEDIA_BUCKET)
+   *
+   * Or uncomment below and provide your real D1 database UUID:
+   * "d1_databases": [
+   *   {
+   *     "binding": "DB",
+   *     "database_name": "satibax-db",
+   *     "database_id": "<YOUR-REAL-D1-DATABASE-UUID>",
+   *     "migrations_dir": "migrations"
+   *   }
+   * ]
    */
-  "d1_databases": [
-    {
-      "binding": "DB",
-      "database_name": "satibax-db",
-      "database_id": "satibax-production-d1-database-id",
-      "migrations_dir": "migrations"
-    }
-  ],
-
-  /**
-   * R2 Storage Bucket Binding
-   * Provides persistent cloud object storage for administrative product photo uploads,
-   * with zero egress fees and automated edge CDN distribution.
-   */
-  "r2_buckets": [
-    {
-      "binding": "MEDIA_BUCKET",
-      "bucket_name": "satibax-media"
-    }
-  ],
 
   /**
    * Compatibility flags for optimal edge performance & Web standard APIs
