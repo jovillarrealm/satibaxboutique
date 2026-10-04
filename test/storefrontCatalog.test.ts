@@ -275,6 +275,34 @@ describe('Header component', () => {
     );
     expect(html).toContain('Satibax Boutique');
   });
+
+  it('renders dark mode toggle button in light mode', () => {
+    const html = renderToString(
+      React.createElement(Header, {
+        isDarkMode: false,
+      })
+    );
+    expect(html).toContain('aria-label="Cambiar a modo oscuro"');
+  });
+
+  it('renders dark mode toggle button in dark mode', () => {
+    const html = renderToString(
+      React.createElement(Header, {
+        isDarkMode: true,
+      })
+    );
+    expect(html).toContain('aria-label="Cambiar a modo claro"');
+  });
+
+  it('renders wishlist action button with badge counter', () => {
+    const html = renderToString(
+      React.createElement(Header, {
+        wishlistCount: 4,
+      })
+    );
+    expect(html).toContain('aria-label="Lista de deseos (4 productos)"');
+    expect(html).toContain('4');
+  });
 });
 
 describe('CategoryFilter component', () => {
@@ -351,6 +379,29 @@ describe('ProductCard component', () => {
     expect(html).toContain('Shampoo S\u00f3lido Brillo Natural');
     expect(html).toContain('Sentida Bot\u00e1nica');
   });
+
+  it('renders favorite toggle button with inactive status by default', () => {
+    const html = renderToString(
+      React.createElement(ProductCard, {
+        product: MOCK_PRODUCTS[0],
+        isFavorite: false,
+      })
+    );
+
+    expect(html).toContain('aria-label="Guardar Serum Facial Retinol Night Repair en favoritos"');
+  });
+
+  it('renders favorite toggle button with active filled status when isFavorite is true', () => {
+    const html = renderToString(
+      React.createElement(ProductCard, {
+        product: MOCK_PRODUCTS[0],
+        isFavorite: true,
+      })
+    );
+
+    expect(html).toContain('aria-label="Quitar Serum Facial Retinol Night Repair de favoritos"');
+    expect(html).toContain('fill-rose-500');
+  });
 });
 
 describe('ProductGrid component', () => {
@@ -363,6 +414,18 @@ describe('ProductGrid component', () => {
 
     expect(html).toContain('Serum Facial Retinol Night Repair');
     expect(html).toContain('Desodorante Piedra Alumbre');
+  });
+
+  it('forwards wishlist favorites state to ProductCard children', () => {
+    const html = renderToString(
+      React.createElement(ProductGrid, {
+        products: [MOCK_PRODUCTS[0], MOCK_PRODUCTS[1]],
+        wishlist: [MOCK_PRODUCTS[0].id],
+      })
+    );
+
+    expect(html).toContain('aria-label="Quitar Serum Facial Retinol Night Repair de favoritos"');
+    expect(html).toContain('aria-label="Guardar Desodorante Piedra Alumbre en favoritos"');
   });
 
   it('renders comforting empty state when no products match', () => {

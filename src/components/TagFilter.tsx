@@ -23,7 +23,7 @@ export const TagFilter: React.FC<TagFilterProps> = ({
 
   return (
     <div className="flex flex-wrap items-center gap-2 sm:justify-center">
-      <span className="text-xs uppercase tracking-wider text-[#3D4D45]/70 font-semibold mr-1">
+      <span className="text-xs uppercase tracking-wider text-[#3D4D45]/70 dark:text-[#E8EFEA]/70 font-semibold mr-1">
         Filtros:
       </span>
       {TAG_TOGGLES.map((item) => {
@@ -35,10 +35,10 @@ export const TagFilter: React.FC<TagFilterProps> = ({
             key={item.id}
             type="button"
             onClick={() => onToggleTag(item.tag)}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-[#8FA479] ${
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-[#8FA479] cursor-pointer ${
               isSelected
-                ? 'bg-[#8FA479] text-[#F9F7F2] shadow-sm font-semibold'
-                : 'bg-white/90 text-[#3D4D45] hover:bg-[#8FA479]/20 border border-[#3D4D45]/15'
+                ? 'bg-[#8FA479] text-[#151D18] shadow-sm font-semibold'
+                : 'bg-white/90 dark:bg-[#223028] text-[#3D4D45] dark:text-[#E8EFEA] hover:bg-[#8FA479]/20 dark:hover:bg-white/10 border border-[#3D4D45]/15 dark:border-white/10'
             }`}
             aria-pressed={isSelected}
           >
@@ -56,7 +56,7 @@ export const TagFilter: React.FC<TagFilterProps> = ({
         <button
           type="button"
           onClick={onClearTags}
-          className="text-xs text-[#553A49] hover:underline ml-1 font-medium"
+          className="text-xs text-[#553A49] dark:text-[#E8A598] hover:underline ml-1 font-medium cursor-pointer"
         >
           Limpiar filtros
         </button>

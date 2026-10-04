@@ -106,7 +106,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
       onClick={onClose}
     >
       <div
-        className="relative bg-[#F9F7F2] w-full max-w-4xl rounded-3xl shadow-2xl border border-[#3D4D45]/15 overflow-hidden my-auto transform transition-all flex flex-col max-h-[90vh]"
+        className="relative bg-[#F9F7F2] dark:bg-[#1C2620] text-[#3D4D45] dark:text-[#E8EFEA] w-full max-w-4xl rounded-3xl shadow-2xl border border-[#3D4D45]/15 dark:border-white/10 overflow-hidden my-auto transform transition-all flex flex-col max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
@@ -114,7 +114,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
           type="button"
           onClick={onClose}
           aria-label="Cerrar detalle"
-          className="absolute top-4 right-4 z-20 p-2.5 rounded-full bg-white/80 hover:bg-white text-[#3D4D45] hover:text-[#553A49] transition-all shadow-md focus:outline-none focus:ring-2 focus:ring-[#8FA479]"
+          className="absolute top-4 right-4 z-20 p-2.5 rounded-full bg-white/80 dark:bg-[#223028]/80 hover:bg-white dark:hover:bg-[#223028] text-[#3D4D45] dark:text-[#E8EFEA] hover:text-[#553A49] dark:hover:text-[#8FA479] transition-all shadow-md focus:outline-none focus:ring-2 focus:ring-[#8FA479] cursor-pointer"
         >
           <X className="w-5 h-5" />
         </button>
@@ -125,7 +125,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             {/* Gallery Column */}
             <div className="flex flex-col gap-3">
               {/* Main Image Display */}
-              <div className="relative aspect-square w-full rounded-2xl bg-white border border-[#3D4D45]/10 overflow-hidden flex items-center justify-center shadow-inner">
+              <div className="relative aspect-square w-full rounded-2xl bg-white dark:bg-[#223028] border border-[#3D4D45]/10 dark:border-white/10 overflow-hidden flex items-center justify-center shadow-inner">
                 {hasImage ? (
                   <img
                     src={currentImage!}
@@ -134,12 +134,12 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                     className="w-full h-full object-cover object-center transition-all duration-300"
                   />
                 ) : (
-                  <div className="flex flex-col items-center justify-center p-8 text-center text-[#3D4D45]/40 bg-gradient-to-br from-[#F9F7F2] to-[#8FA479]/15 w-full h-full">
+                  <div className="flex flex-col items-center justify-center p-8 text-center text-[#3D4D45]/40 dark:text-[#E8EFEA]/40 bg-gradient-to-br from-[#F9F7F2] to-[#8FA479]/15 dark:from-[#1C2620] dark:to-[#8FA479]/15 w-full h-full">
                     <Leaf className="w-16 h-16 text-[#8FA479]/60 mb-3" />
-                    <span className="font-serif text-lg font-semibold text-[#3D4D45]">
+                    <span className="font-serif text-lg font-semibold text-[#3D4D45] dark:text-[#E8EFEA]">
                       {product.name}
                     </span>
-                    <span className="text-xs uppercase tracking-widest text-[#3D4D45]/60 mt-1">
+                    <span className="text-xs uppercase tracking-widest text-[#3D4D45]/60 dark:text-[#E8EFEA]/60 mt-1">
                       {product.brand || 'Satibax'}
                     </span>
                   </div>
@@ -201,7 +201,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 {/* Product Title */}
                 <h2
                   id="product-detail-title"
-                  className="font-serif text-2xl sm:text-3xl font-bold text-[#3D4D45] leading-snug"
+                  className="font-serif text-2xl sm:text-3xl font-bold text-[#3D4D45] dark:text-[#E8EFEA] leading-snug"
                 >
                   {product.name}
                 </h2>
@@ -212,7 +212,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                     {product.tags.map((tag) => (
                       <span
                         key={tag}
-                        className="text-xs font-semibold bg-[#8FA479]/15 text-[#3D4D45] px-2.5 py-0.5 rounded-full border border-[#8FA479]/20"
+                        className="text-xs font-semibold bg-[#8FA479]/15 dark:bg-[#8FA479]/20 text-[#3D4D45] dark:text-[#E8EFEA] px-2.5 py-0.5 rounded-full border border-[#8FA479]/20 dark:border-[#8FA479]/30"
                       >
                         {formatTagLabel(tag)}
                       </span>
@@ -221,20 +221,20 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 )}
 
                 {/* Price Display */}
-                <div className="mt-4 pb-4 border-b border-[#3D4D45]/10">
-                  <span className="text-xs uppercase tracking-wider text-[#3D4D45]/60 font-medium block">
+                <div className="mt-4 pb-4 border-b border-[#3D4D45]/10 dark:border-white/10">
+                  <span className="text-xs uppercase tracking-wider text-[#3D4D45]/60 dark:text-[#E8EFEA]/60 font-medium block">
                     Precio en Pesos Argentinos
                   </span>
                   <div className="flex items-baseline gap-2 mt-0.5">
-                    <span className="font-serif text-3xl font-bold text-[#3D4D45]">
+                    <span className="font-serif text-3xl font-bold text-[#3D4D45] dark:text-[#E8EFEA]">
                       {formatPriceARS(product.price)}
                     </span>
-                    <span className="text-xs text-[#3D4D45]/60">ARS</span>
+                    <span className="text-xs text-[#3D4D45]/60 dark:text-[#E8EFEA]/60">ARS</span>
                   </div>
                 </div>
 
                 {/* Main Overview Description */}
-                <div className="mt-4 prose prose-sm text-[#3D4D45]/85 leading-relaxed">
+                <div className="mt-4 prose prose-sm text-[#3D4D45]/85 dark:text-[#E8EFEA]/85 leading-relaxed">
                   <p className="whitespace-pre-line text-sm sm:text-base font-light">
                     {parsedDetails.overview ||
                       'Fórmula botánica cuidadosamente desarrollada con ingredientes seleccionados para el cuidado diario de tu bienestar.'}
@@ -243,25 +243,26 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               </div>
 
               {/* Purchase Action Box */}
-              <div className="bg-white/80 p-4 sm:p-5 rounded-2xl border border-[#3D4D45]/10 shadow-sm space-y-4">
+              {/* Purchase Action Box */}
+              <div className="bg-white/80 dark:bg-[#223028]/80 p-4 sm:p-5 rounded-2xl border border-[#3D4D45]/10 dark:border-white/10 shadow-sm space-y-4">
                 <div className="flex items-center justify-between gap-4">
-                  <span className="text-xs sm:text-sm font-semibold text-[#3D4D45]">
+                  <span className="text-xs sm:text-sm font-semibold text-[#3D4D45] dark:text-[#E8EFEA]">
                     Cantidad:
                   </span>
 
                   {/* Quantity Stepper */}
-                  <div className="flex items-center border border-[#3D4D45]/20 rounded-xl bg-white overflow-hidden shadow-inner">
+                  <div className="flex items-center border border-[#3D4D45]/20 dark:border-white/15 rounded-xl bg-white dark:bg-[#151D18] overflow-hidden shadow-inner">
                     <button
                       type="button"
                       onClick={handleDecrement}
                       aria-label="Disminuir cantidad"
-                      className="p-2 sm:px-3 text-[#3D4D45] hover:bg-[#8FA479]/15 transition-colors focus:outline-none"
+                      className="p-2 sm:px-3 text-[#3D4D45] dark:text-[#E8EFEA] hover:bg-[#8FA479]/15 dark:hover:bg-white/10 transition-colors focus:outline-none cursor-pointer"
                     >
                       <Minus className="w-3.5 h-3.5" />
                     </button>
                     <span
                       aria-live="polite"
-                      className="px-4 py-1 text-sm font-bold text-[#3D4D45] min-w-[2.5rem] text-center"
+                      className="px-4 py-1 text-sm font-bold text-[#3D4D45] dark:text-[#E8EFEA] min-w-[2.5rem] text-center"
                     >
                       {quantity}
                     </span>
@@ -269,7 +270,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                       type="button"
                       onClick={handleIncrement}
                       aria-label="Aumentar cantidad"
-                      className="p-2 sm:px-3 text-[#3D4D45] hover:bg-[#8FA479]/15 transition-colors focus:outline-none"
+                      className="p-2 sm:px-3 text-[#3D4D45] dark:text-[#E8EFEA] hover:bg-[#8FA479]/15 dark:hover:bg-white/10 transition-colors focus:outline-none cursor-pointer"
                     >
                       <Plus className="w-3.5 h-3.5" />
                     </button>
@@ -280,10 +281,10 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 <button
                   type="button"
                   onClick={handleAdd}
-                  className={`w-full py-3 px-5 rounded-xl font-semibold text-sm sm:text-base flex items-center justify-center gap-2 transition-all duration-200 shadow-md focus:outline-none focus:ring-2 focus:ring-[#8FA479] active:scale-[0.98] ${
+                  className={`w-full py-3 px-5 rounded-xl font-semibold text-sm sm:text-base flex items-center justify-center gap-2 transition-all duration-200 shadow-md focus:outline-none focus:ring-2 focus:ring-[#8FA479] active:scale-[0.98] cursor-pointer ${
                     addedRecently
                       ? 'bg-[#8FA479] text-[#F9F7F2]'
-                      : 'bg-[#3D4D45] hover:bg-[#8FA479] text-[#F9F7F2]'
+                      : 'bg-[#3D4D45] dark:bg-[#8FA479] hover:bg-[#8FA479] dark:hover:bg-[#8FA479]/90 text-[#F9F7F2] dark:text-[#151D18]'
                   }`}
                 >
                   {addedRecently ? (
@@ -303,15 +304,15 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
           </div>
 
           {/* Detailed Editorial Sections */}
-          <div className="border-t border-[#3D4D45]/15 pt-6 space-y-6">
+          <div className="border-t border-[#3D4D45]/15 dark:border-white/10 pt-6 space-y-6">
             {/* Bundle Items for Gift Kits */}
             {parsedDetails.bundleItems.length > 0 && (
-              <div className="bg-white/60 p-5 rounded-2xl border border-[#3D4D45]/10">
-                <div className="flex items-center gap-2 mb-3 text-[#3D4D45]">
+              <div className="bg-white/60 dark:bg-[#223028]/60 p-5 rounded-2xl border border-[#3D4D45]/10 dark:border-white/10">
+                <div className="flex items-center gap-2 mb-3 text-[#3D4D45] dark:text-[#E8EFEA]">
                   <Gift className="w-5 h-5 text-[#8FA479]" />
                   <h4 className="font-serif text-lg font-bold">¿Qué incluye este kit?</h4>
                 </div>
-                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-[#3D4D45]/85">
+                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-[#3D4D45]/85 dark:text-[#E8EFEA]/85">
                   {parsedDetails.bundleItems.map((item, idx) => (
                     <li key={idx} className="flex items-start gap-2">
                       <span className="text-[#8FA479] font-bold">🌿</span>
@@ -325,14 +326,14 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             {/* Benefits & Usage Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Benefits Section */}
-              <div className="bg-white/60 p-5 rounded-2xl border border-[#3D4D45]/10 flex flex-col">
-                <div className="flex items-center gap-2 mb-3 text-[#3D4D45]">
+              <div className="bg-white/60 dark:bg-[#223028]/60 p-5 rounded-2xl border border-[#3D4D45]/10 dark:border-white/10 flex flex-col">
+                <div className="flex items-center gap-2 mb-3 text-[#3D4D45] dark:text-[#E8EFEA]">
                   <Sparkles className="w-5 h-5 text-[#8FA479]" />
                   <h4 className="font-serif text-lg font-bold">Beneficios</h4>
                 </div>
 
                 {parsedDetails.benefits.length > 0 ? (
-                  <ul className="space-y-2 text-sm text-[#3D4D45]/85 flex-1">
+                  <ul className="space-y-2 text-sm text-[#3D4D45]/85 dark:text-[#E8EFEA]/85 flex-1">
                     {parsedDetails.benefits.map((benefit, idx) => (
                       <li key={idx} className="flex items-start gap-2">
                         <span className="text-[#8FA479] mt-0.5">•</span>
@@ -341,7 +342,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                     ))}
                   </ul>
                 ) : (
-                  <ul className="space-y-2 text-sm text-[#3D4D45]/85 flex-1">
+                  <ul className="space-y-2 text-sm text-[#3D4D45]/85 dark:text-[#E8EFEA]/85 flex-1">
                     <li className="flex items-start gap-2">
                       <span className="text-[#8FA479] mt-0.5">•</span>
                       <span>Fórmula botánica con extractos naturales y activos puros.</span>
@@ -359,14 +360,14 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               </div>
 
               {/* Usage Instructions Section */}
-              <div className="bg-white/60 p-5 rounded-2xl border border-[#3D4D45]/10 flex flex-col">
-                <div className="flex items-center gap-2 mb-3 text-[#3D4D45]">
+              <div className="bg-white/60 dark:bg-[#223028]/60 p-5 rounded-2xl border border-[#3D4D45]/10 dark:border-white/10 flex flex-col">
+                <div className="flex items-center gap-2 mb-3 text-[#3D4D45] dark:text-[#E8EFEA]">
                   <Droplets className="w-5 h-5 text-[#8FA479]" />
                   <h4 className="font-serif text-lg font-bold">Modo de uso</h4>
                 </div>
 
                 {parsedDetails.usageInstructions.length > 0 ? (
-                  <ul className="space-y-2 text-sm text-[#3D4D45]/85 flex-1">
+                  <ul className="space-y-2 text-sm text-[#3D4D45]/85 dark:text-[#E8EFEA]/85 flex-1">
                     {parsedDetails.usageInstructions.map((instruction, idx) => (
                       <li key={idx} className="flex items-start gap-2">
                         <span className="text-[#8FA479] mt-0.5">•</span>
@@ -375,7 +376,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                     ))}
                   </ul>
                 ) : (
-                  <ul className="space-y-2 text-sm text-[#3D4D45]/85 flex-1">
+                  <ul className="space-y-2 text-sm text-[#3D4D45]/85 dark:text-[#E8EFEA]/85 flex-1">
                     <li className="flex items-start gap-2">
                       <span className="text-[#8FA479] mt-0.5">•</span>
                       <span>Aplicar sobre la piel limpia y masajear con suavidad.</span>
@@ -390,18 +391,18 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             </div>
 
             {/* Ingredients Section */}
-            <div className="bg-white/60 p-5 rounded-2xl border border-[#3D4D45]/10">
-              <div className="flex items-center gap-2 mb-2 text-[#3D4D45]">
+            <div className="bg-white/60 dark:bg-[#223028]/60 p-5 rounded-2xl border border-[#3D4D45]/10 dark:border-white/10">
+              <div className="flex items-center gap-2 mb-2 text-[#3D4D45] dark:text-[#E8EFEA]">
                 <FileText className="w-5 h-5 text-[#8FA479]" />
                 <h4 className="font-serif text-lg font-bold">Ingredientes</h4>
               </div>
 
               {parsedDetails.ingredients ? (
-                <p className="text-xs sm:text-sm text-[#3D4D45]/80 font-mono tracking-tight bg-[#F9F7F2] p-3 rounded-xl border border-[#3D4D45]/10 leading-relaxed">
+                <p className="text-xs sm:text-sm text-[#3D4D45]/80 dark:text-[#E8EFEA]/80 font-mono tracking-tight bg-[#F9F7F2] dark:bg-[#151D18] p-3 rounded-xl border border-[#3D4D45]/10 dark:border-white/10 leading-relaxed">
                   {parsedDetails.ingredients}
                 </p>
               ) : (
-                <p className="text-xs sm:text-sm text-[#3D4D45]/80 leading-relaxed">
+                <p className="text-xs sm:text-sm text-[#3D4D45]/80 dark:text-[#E8EFEA]/80 leading-relaxed">
                   Elaborado con aceites botánicos, extractos vegetales puros e ingredientes de origen consciente. Sin parabenos, sulfatos agresivos ni derivados de petróleo.
                 </p>
               )}

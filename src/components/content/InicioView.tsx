@@ -10,6 +10,8 @@ export interface InicioViewProps {
   onNavigateTienda: (options?: { kitOnly?: boolean; category?: string }) => void;
   onAddToSelection: (product: Product) => void;
   onViewDetails: (product: Product) => void;
+  wishlist?: string[];
+  onToggleFavorite?: (productId: string) => void;
 }
 
 const REVIEWS = [
@@ -44,6 +46,8 @@ export const InicioView: React.FC<InicioViewProps> = ({
   onNavigateTienda,
   onAddToSelection,
   onViewDetails,
+  wishlist = [],
+  onToggleFavorite,
 }) => {
   const [destacadosTab, setDestacadosTab] = useState<'elegidos' | 'nuevos' | 'regalo'>('elegidos');
 
@@ -111,34 +115,34 @@ export const InicioView: React.FC<InicioViewProps> = ({
       </section>
 
       {/* 2. 4 Pillars Value Props Section */}
-      <section className="py-16 sm:py-20 bg-[#F9F7F2] border-b border-[#3D4D45]/10">
+      <section className="py-16 sm:py-20 bg-[#F9F7F2] dark:bg-[#151D18] border-b border-[#3D4D45]/10 dark:border-white/10 transition-colors duration-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 text-center">
-            <div className="flex flex-col items-center space-y-3 p-6 rounded-2xl bg-white/70 shadow-xs border border-[#3D4D45]/5 hover:shadow-md transition-shadow">
+            <div className="flex flex-col items-center space-y-3 p-6 rounded-2xl bg-white/70 dark:bg-[#223028] shadow-xs border border-[#3D4D45]/5 dark:border-white/10 hover:shadow-md transition-shadow">
               <div className="text-4xl sm:text-5xl mb-2">💚</div>
-              <h3 className="font-serif text-lg sm:text-xl font-bold text-[#3D4D45]">100% Natural</h3>
-              <p className="text-[#3D4D45]/80 leading-relaxed text-xs sm:text-sm">
+              <h3 className="font-serif text-lg sm:text-xl font-bold text-[#3D4D45] dark:text-[#E8EFEA]">100% Natural</h3>
+              <p className="text-[#3D4D45]/80 dark:text-[#E8EFEA]/80 leading-relaxed text-xs sm:text-sm">
                 Ingredientes orgánicos seleccionados sin parabenos, sulfatos ni conservantes artificiales.
               </p>
             </div>
-            <div className="flex flex-col items-center space-y-3 p-6 rounded-2xl bg-white/70 shadow-xs border border-[#3D4D45]/5 hover:shadow-md transition-shadow">
+            <div className="flex flex-col items-center space-y-3 p-6 rounded-2xl bg-white/70 dark:bg-[#223028] shadow-xs border border-[#3D4D45]/5 dark:border-white/10 hover:shadow-md transition-shadow">
               <div className="text-4xl sm:text-5xl mb-2">🌱</div>
-              <h3 className="font-serif text-lg sm:text-xl font-bold text-[#3D4D45]">Cruelty Free</h3>
-              <p className="text-[#3D4D45]/80 leading-relaxed text-xs sm:text-sm">
+              <h3 className="font-serif text-lg sm:text-xl font-bold text-[#3D4D45] dark:text-[#E8EFEA]">Cruelty Free</h3>
+              <p className="text-[#3D4D45]/80 dark:text-[#E8EFEA]/80 leading-relaxed text-xs sm:text-sm">
                 Amamos a los animales. Ninguno de nuestros productos o insumos es testado en ellos.
               </p>
             </div>
-            <div className="flex flex-col items-center space-y-3 p-6 rounded-2xl bg-white/70 shadow-xs border border-[#3D4D45]/5 hover:shadow-md transition-shadow">
+            <div className="flex flex-col items-center space-y-3 p-6 rounded-2xl bg-white/70 dark:bg-[#223028] shadow-xs border border-[#3D4D45]/5 dark:border-white/10 hover:shadow-md transition-shadow">
               <div className="text-4xl sm:text-5xl mb-2">♻️</div>
-              <h3 className="font-serif text-lg sm:text-xl font-bold text-[#3D4D45]">Eco-Friendly</h3>
-              <p className="text-[#3D4D45]/80 leading-relaxed text-xs sm:text-sm">
+              <h3 className="font-serif text-lg sm:text-xl font-bold text-[#3D4D45] dark:text-[#E8EFEA]">Eco-Friendly</h3>
+              <p className="text-[#3D4D45]/80 dark:text-[#E8EFEA]/80 leading-relaxed text-xs sm:text-sm">
                 Packaging libre de plásticos y biodegradable. Cuidamos el impacto en cada envío.
               </p>
             </div>
-            <div className="flex flex-col items-center space-y-3 p-6 rounded-2xl bg-white/70 shadow-xs border border-[#3D4D45]/5 hover:shadow-md transition-shadow">
+            <div className="flex flex-col items-center space-y-3 p-6 rounded-2xl bg-white/70 dark:bg-[#223028] shadow-xs border border-[#3D4D45]/5 dark:border-white/10 hover:shadow-md transition-shadow">
               <div className="text-4xl sm:text-5xl mb-2">🌾</div>
-              <h3 className="font-serif text-lg sm:text-xl font-bold text-[#3D4D45]">Sin Gluten</h3>
-              <p className="text-[#3D4D45]/80 leading-relaxed text-xs sm:text-sm">
+              <h3 className="font-serif text-lg sm:text-xl font-bold text-[#3D4D45] dark:text-[#E8EFEA]">Sin Gluten</h3>
+              <p className="text-[#3D4D45]/80 dark:text-[#E8EFEA]/80 leading-relaxed text-xs sm:text-sm">
                 Productos seguros para celíacos. Todos nuestros items están certificados gluten-free.
               </p>
             </div>
@@ -147,21 +151,21 @@ export const InicioView: React.FC<InicioViewProps> = ({
       </section>
 
       {/* 3. Destacados / Best Sellers Section */}
-      <section className="py-20 bg-white border-b border-[#3D4D45]/10">
+      <section className="py-20 bg-white dark:bg-[#1C2620] border-b border-[#3D4D45]/10 dark:border-white/10 transition-colors duration-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
             <div>
               <span className="text-[#8FA479] font-bold text-xs uppercase tracking-widest">
                 Destacados
               </span>
-              <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#3D4D45] mt-1">
+              <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#3D4D45] dark:text-[#E8EFEA] mt-1">
                 Encuentra tu Favorito
               </h2>
             </div>
             <button
               type="button"
               onClick={() => onNavigateTienda()}
-              className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#3D4D45] hover:text-[#8FA479] transition-colors group cursor-pointer"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#3D4D45] dark:text-[#E8EFEA] hover:text-[#8FA479] dark:hover:text-[#8FA479] transition-colors group cursor-pointer"
             >
               <span>Ver catálogo completo</span>
               <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
@@ -175,8 +179,8 @@ export const InicioView: React.FC<InicioViewProps> = ({
               onClick={() => setDestacadosTab('elegidos')}
               className={`px-5 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
                 destacadosTab === 'elegidos'
-                  ? 'bg-[#3D4D45] text-white shadow-sm'
-                  : 'bg-[#F9F7F2] text-[#3D4D45] hover:bg-[#8FA479]/20'
+                  ? 'bg-[#3D4D45] dark:bg-[#8FA479] text-white dark:text-[#151D18] shadow-sm font-bold'
+                  : 'bg-[#F9F7F2] dark:bg-[#223028] text-[#3D4D45] dark:text-[#E8EFEA] hover:bg-[#8FA479]/20'
               }`}
             >
               ⭐ Más Elegidos
@@ -186,8 +190,8 @@ export const InicioView: React.FC<InicioViewProps> = ({
               onClick={() => setDestacadosTab('nuevos')}
               className={`px-5 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
                 destacadosTab === 'nuevos'
-                  ? 'bg-[#3D4D45] text-white shadow-sm'
-                  : 'bg-[#F9F7F2] text-[#3D4D45] hover:bg-[#8FA479]/20'
+                  ? 'bg-[#3D4D45] dark:bg-[#8FA479] text-white dark:text-[#151D18] shadow-sm font-bold'
+                  : 'bg-[#F9F7F2] dark:bg-[#223028] text-[#3D4D45] dark:text-[#E8EFEA] hover:bg-[#8FA479]/20'
               }`}
             >
               ✨ Nuevos
@@ -197,8 +201,8 @@ export const InicioView: React.FC<InicioViewProps> = ({
               onClick={() => setDestacadosTab('regalo')}
               className={`px-5 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
                 destacadosTab === 'regalo'
-                  ? 'bg-[#3D4D45] text-white shadow-sm'
-                  : 'bg-[#F9F7F2] text-[#3D4D45] hover:bg-[#8FA479]/20'
+                  ? 'bg-[#3D4D45] dark:bg-[#8FA479] text-white dark:text-[#151D18] shadow-sm font-bold'
+                  : 'bg-[#F9F7F2] dark:bg-[#223028] text-[#3D4D45] dark:text-[#E8EFEA] hover:bg-[#8FA479]/20'
               }`}
             >
               🎁 Ideal Regalo
@@ -213,6 +217,8 @@ export const InicioView: React.FC<InicioViewProps> = ({
                 product={product}
                 onAddToSelection={onAddToSelection}
                 onViewDetails={onViewDetails}
+                isFavorite={wishlist.includes(product.id)}
+                onToggleFavorite={onToggleFavorite}
               />
             ))}
           </div>
@@ -228,13 +234,13 @@ export const InicioView: React.FC<InicioViewProps> = ({
       />
 
       {/* 5. Google Customer Reviews Section */}
-      <section className="py-20 bg-[#F9F7F2] border-t border-b border-[#3D4D45]/10">
+      <section className="py-20 bg-[#F9F7F2] dark:bg-[#151D18] border-t border-b border-[#3D4D45]/10 dark:border-white/10 transition-colors duration-200">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#3D4D45] mb-3">
+            <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#3D4D45] dark:text-[#E8EFEA] mb-3">
               Lo que dicen quienes nos eligen
             </h2>
-            <p className="text-[#3D4D45]/70 max-w-xl mx-auto text-sm sm:text-base font-light">
+            <p className="text-[#3D4D45]/70 dark:text-[#E8EFEA]/70 max-w-xl mx-auto text-sm sm:text-base font-light">
               Reseñas reales de clientes que confían en la cosmética consciente de Satibax
             </p>
           </div>
@@ -243,7 +249,7 @@ export const InicioView: React.FC<InicioViewProps> = ({
             {REVIEWS.map((review) => (
               <div
                 key={review.id}
-                className="bg-white p-6 sm:p-8 rounded-2xl shadow-xs border border-[#3D4D45]/10 flex flex-col justify-between hover:shadow-md transition-shadow"
+                className="bg-white dark:bg-[#223028] p-6 sm:p-8 rounded-2xl shadow-xs border border-[#3D4D45]/10 dark:border-white/10 flex flex-col justify-between hover:shadow-md transition-shadow"
               >
                 <div>
                   <div className="flex items-center gap-1 text-amber-400 mb-4">
@@ -251,15 +257,15 @@ export const InicioView: React.FC<InicioViewProps> = ({
                       <Star key={i} className="w-4 h-4 fill-amber-400" />
                     ))}
                   </div>
-                  <p className="text-[#3D4D45]/85 italic text-sm sm:text-base leading-relaxed mb-6">
+                  <p className="text-[#3D4D45]/85 dark:text-[#E8EFEA]/85 italic text-sm sm:text-base leading-relaxed mb-6">
                     &ldquo;{review.comment}&rdquo;
                   </p>
                 </div>
 
-                <div className="pt-4 border-t border-[#3D4D45]/10 flex items-center justify-between text-xs">
+                <div className="pt-4 border-t border-[#3D4D45]/10 dark:border-white/10 flex items-center justify-between text-xs">
                   <div>
-                    <h4 className="font-bold text-[#3D4D45]">{review.name}</h4>
-                    <span className="text-[#3D4D45]/60">{review.role}</span>
+                    <h4 className="font-bold text-[#3D4D45] dark:text-[#E8EFEA]">{review.name}</h4>
+                    <span className="text-[#3D4D45]/60 dark:text-[#E8EFEA]/60">{review.role}</span>
                   </div>
                   <CheckCircle2 className="w-4 h-4 text-[#8FA479]" />
                 </div>

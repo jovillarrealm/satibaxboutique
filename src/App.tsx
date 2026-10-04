@@ -28,6 +28,12 @@ import {
 import { ItemSelectionDrawer } from './components/ItemSelectionDrawer';
 import { FloatingWhatsAppButton } from './components/FloatingWhatsAppButton';
 import { Sparkles, Gift, Heart } from 'lucide-react';
+import { getInitialTheme, setStoredTheme, applyTheme } from './utils/theme';
+import {
+  loadWishlistFromStorage,
+  saveWishlistToStorage,
+  toggleWishlist,
+} from './domain/wishlist';
 
 export interface AppProps {
   initialProducts?: Product[];
@@ -122,6 +128,32 @@ export const App: React.FC<AppProps> = ({
     saveSelectionToStorage(selection);
   }, [selection]);
 
+  // Theme state persisted to localStorage and applied to documentElement
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => getInitialTheme());
+
+  useEffect(() => {
+    applyTheme(theme);
+    setStoredTheme(theme);
+  }, [theme]);
+
+  const handleToggleDarkMode = () => {
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  };
+
+  // Wishlist state persisted to localStorage
+  const [wishlist, setWishlist] = useState<string[]>(() => loadWishlistFromStorage());
+
+  useEffect(() => {
+    saveWishlistToStorage(wishlist);
+  }, [wishlist]);
+
+  const handleToggleFavorite = (productId: string) => {
+    setWishlist((prev) => toggleWishlist(prev, productId));
+  };
+
+  // Quick filter for wishlist items in Tienda
+  const [favoritesOnly, setFavoritesOnly] = useState<boolean>(false);
+
   // Support global custom event for opening selection drawer
   useEffect(() => {
     const handleOpenDrawer = () => setIsDrawerOpen(true);
@@ -174,6 +206,7 @@ export const App: React.FC<AppProps> = ({
     setSelectedTags([]);
     setSearchQuery('');
     setKitOnly(false);
+    setFavoritesOnly(false);
   };
 
   // Handle nav clicks
@@ -182,12 +215,15 @@ export const App: React.FC<AppProps> = ({
     if (navId === 'catalogo') {
       targetNav = 'tienda';
       setKitOnly(false);
+      setFavoritesOnly(false);
     } else if (navId === 'kits') {
       targetNav = 'tienda';
       setKitOnly(true);
+      setFavoritesOnly(false);
       setSelectedCategory('todos');
     } else if (navId === 'tienda') {
       setKitOnly(false);
+      setFavoritesOnly(false);
     }
     setActiveNav(targetNav);
     if (typeof window !== 'undefined' && window.history?.pushState) {
@@ -204,16 +240,34 @@ export const App: React.FC<AppProps> = ({
     }
   };
 
+  // Handle header wishlist click: navigates to Tienda and activates favorites filter
+  const handleOpenWishlist = () => {
+    setActiveNav('tienda');
+    setFavoritesOnly(true);
+    setKitOnly(false);
+    setSelectedCategory('todos');
+    if (typeof window !== 'undefined' && window.history?.pushState) {
+      if (window.location.pathname !== '/') {
+        window.history.pushState({}, '', '/');
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
   // Filter products according to current state
   const filteredProducts = useMemo(() => {
-    return filterProducts(products, {
+    let result = filterProducts(products, {
       category: selectedCategory,
       tags: selectedTags,
       query: searchQuery,
       kitOnly,
       activeOnly: true,
     });
-  }, [products, selectedCategory, selectedTags, searchQuery, kitOnly]);
+    if (favoritesOnly) {
+      result = result.filter((p) => wishlist.includes(p.id));
+    }
+    return result;
+  }, [products, selectedCategory, selectedTags, searchQuery, kitOnly, favoritesOnly, wishlist]);
 
   // Dedicated Admin Dashboard View (routed via /admin or footer link)
   if (activeNav === 'admin') {
@@ -227,13 +281,17 @@ export const App: React.FC<AppProps> = ({
   }
 
   return (
-    <div className="min-h-screen bg-[#F9F7F2] text-[#3D4D45] flex flex-col font-sans selection:bg-[#8FA479]/30">
+    <div className="min-h-screen bg-[#F9F7F2] dark:bg-[#151D18] text-[#3D4D45] dark:text-[#E8EFEA] flex flex-col font-sans selection:bg-[#8FA479]/30 transition-colors duration-200">
       {/* Navigation Header */}
       <Header
         itemCount={selection.totalItems}
         activeNav={activeNav}
         onNavClick={handleNavClick}
         onOpenSelection={() => setIsDrawerOpen(true)}
+        isDarkMode={theme === 'dark'}
+        onToggleDarkMode={handleToggleDarkMode}
+        wishlistCount={wishlist.length}
+        onOpenWishlist={handleOpenWishlist}
       />
 
       {/* Main Content Area */}
@@ -244,6 +302,7 @@ export const App: React.FC<AppProps> = ({
             products={products}
             onNavigateTienda={(options) => {
               setActiveNav('tienda');
+              setFavoritesOnly(false);
               if (options?.kitOnly) {
                 setKitOnly(true);
                 setSelectedCategory('todos');
@@ -259,39 +318,65 @@ export const App: React.FC<AppProps> = ({
             }}
             onAddToSelection={handleAddToSelection}
             onViewDetails={handleViewDetails}
+            wishlist={wishlist}
+            onToggleFavorite={handleToggleFavorite}
           />
         )}
 
         {/* View 2: Tienda & Catálogo (Dedicated Shopping View WITHOUT Hero Cover Image) */}
         {(activeNav === 'tienda' || activeNav === 'catalogo' || activeNav === 'kits') && (
           <>
-            <section className="bg-[#F9F7F2] py-8 sm:py-10 border-b border-[#3D4D45]/10">
+            <section className="bg-[#F9F7F2] dark:bg-[#151D18] py-8 sm:py-10 border-b border-[#3D4D45]/10 dark:border-white/10 transition-colors duration-200">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                   <div>
                     <span className="text-[#8FA479] font-bold text-xs uppercase tracking-widest">
                       Tienda Botánica
                     </span>
-                    <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#3D4D45] mt-1">
-                      Tienda &amp; Catálogo Completo
+                    <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#3D4D45] dark:text-[#E8EFEA] mt-1">
+                      {favoritesOnly ? 'Mis Favoritos' : 'Tienda & Catálogo Completo'}
                     </h2>
-                    <p className="mt-2 text-sm sm:text-base text-[#3D4D45]/80 font-light max-w-2xl">
-                      Cuidado natural para tu piel y bienestar diario. Cosmética consciente, extractos puros y combinaciones botánicas.
+                    <p className="mt-2 text-sm sm:text-base text-[#3D4D45]/80 dark:text-[#E8EFEA]/80 font-light max-w-2xl">
+                      {favoritesOnly
+                        ? 'Tus productos seleccionados en tu lista de deseos personal.'
+                        : 'Cuidado natural para tu piel y bienestar diario. Cosmética consciente, extractos puros y combinaciones botánicas.'}
                     </p>
                   </div>
 
-                  {/* Quick Kits Promo Toggle */}
-                  <div className="flex items-center gap-2">
+                  {/* Quick Filters Cluster */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFavoritesOnly(!favoritesOnly);
+                        if (!favoritesOnly) {
+                          setKitOnly(false);
+                          setSelectedCategory('todos');
+                        }
+                      }}
+                      className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all duration-200 cursor-pointer shadow-xs ${
+                        favoritesOnly
+                          ? 'bg-[#8FA479] text-[#151D18] shadow-sm font-bold'
+                          : 'bg-white dark:bg-[#223028] text-[#3D4D45] dark:text-[#E8EFEA] hover:bg-[#8FA479]/15 dark:hover:bg-white/10 border border-[#3D4D45]/15 dark:border-white/10'
+                      }`}
+                    >
+                      <Heart className={`w-4 h-4 ${favoritesOnly ? 'fill-current text-[#151D18]' : 'text-[#8FA479]'}`} />
+                      <span>{favoritesOnly ? 'Mostrando sólo Favoritos' : `Favoritos (${wishlist.length})`}</span>
+                    </button>
+
                     <button
                       type="button"
                       onClick={() => {
                         setKitOnly(!kitOnly);
-                        if (!kitOnly) setSelectedCategory('todos');
+                        if (!kitOnly) {
+                          setFavoritesOnly(false);
+                          setSelectedCategory('todos');
+                        }
                       }}
                       className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all duration-200 cursor-pointer shadow-xs ${
                         kitOnly
-                          ? 'bg-[#553A49] text-[#F9F7F2] shadow-sm'
-                          : 'bg-white text-[#3D4D45] hover:bg-[#8FA479]/15 border border-[#3D4D45]/15'
+                          ? 'bg-[#553A49] text-[#F9F7F2] shadow-sm font-bold'
+                          : 'bg-white dark:bg-[#223028] text-[#3D4D45] dark:text-[#E8EFEA] hover:bg-[#8FA479]/15 dark:hover:bg-white/10 border border-[#3D4D45]/15 dark:border-white/10'
                       }`}
                     >
                       <Gift className="w-4 h-4 text-[#8FA479]" />
@@ -332,25 +417,27 @@ export const App: React.FC<AppProps> = ({
               </div>
 
               {/* Catalog Subheader: Counts & Active Filters State */}
-              <div className="flex flex-col sm:flex-row items-baseline justify-between border-b border-[#3D4D45]/10 pb-4 mb-6 gap-2">
+              <div className="flex flex-col sm:flex-row items-baseline justify-between border-b border-[#3D4D45]/10 dark:border-white/10 pb-4 mb-6 gap-2">
                 <div className="flex items-center gap-2">
-                  <h3 className="font-serif text-xl sm:text-2xl font-bold text-[#3D4D45]">
-                    {kitOnly
+                  <h3 className="font-serif text-xl sm:text-2xl font-bold text-[#3D4D45] dark:text-[#E8EFEA]">
+                    {favoritesOnly
+                      ? 'Mis Favoritos'
+                      : kitOnly
                       ? 'Kits y Regalos'
                       : selectedCategory === 'todos'
                       ? 'Catálogo Completo'
                       : `Productos: ${selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)}`}
                   </h3>
-                  <span className="text-xs bg-[#8FA479]/20 text-[#3D4D45] font-semibold px-2.5 py-0.5 rounded-full">
+                  <span className="text-xs bg-[#8FA479]/20 text-[#3D4D45] dark:text-[#E8EFEA] font-semibold px-2.5 py-0.5 rounded-full">
                     {filteredProducts.length} {filteredProducts.length === 1 ? 'producto' : 'productos'}
                   </span>
                 </div>
 
-                {(selectedCategory !== 'todos' || selectedTags.length > 0 || searchQuery || kitOnly) && (
+                {(selectedCategory !== 'todos' || selectedTags.length > 0 || searchQuery || kitOnly || favoritesOnly) && (
                   <button
                     type="button"
                     onClick={handleClearFilters}
-                    className="text-xs text-[#553A49] hover:text-[#3D4D45] font-medium underline underline-offset-4"
+                    className="text-xs text-[#553A49] dark:text-[#E8A598] hover:text-[#3D4D45] dark:hover:text-[#E8EFEA] font-medium underline underline-offset-4 cursor-pointer"
                   >
                     Restablecer todos los filtros
                   </button>
@@ -363,6 +450,8 @@ export const App: React.FC<AppProps> = ({
                 onAddToSelection={handleAddToSelection}
                 onViewDetails={handleViewDetails}
                 onClearFilters={handleClearFilters}
+                wishlist={wishlist}
+                onToggleFavorite={handleToggleFavorite}
               />
             </main>
           </>
@@ -403,7 +492,7 @@ export const App: React.FC<AppProps> = ({
       )}
 
       {/* Botanical Footer */}
-      <footer className="bg-[#3D4D45] text-[#F9F7F2] border-t border-[#3D4D45]/20 mt-8">
+      <footer className="bg-[#3D4D45] dark:bg-[#0E1410] text-[#F9F7F2] border-t border-[#3D4D45]/20 dark:border-white/10 mt-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="md:col-span-1">

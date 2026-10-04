@@ -43,10 +43,10 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
               key={tab.id}
               type="button"
               onClick={() => onSelectCategory(tab.slug)}
-              className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#8FA479] focus:ring-offset-1 ${
+              className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#8FA479] focus:ring-offset-1 cursor-pointer ${
                 isSelected
-                  ? 'bg-[#3D4D45] text-[#F9F7F2] shadow-sm scale-105'
-                  : 'bg-white/80 text-[#3D4D45] hover:bg-[#8FA479]/15 border border-[#3D4D45]/10'
+                  ? 'bg-[#3D4D45] dark:bg-[#8FA479] text-[#F9F7F2] dark:text-[#151D18] shadow-sm scale-105 font-bold'
+                  : 'bg-white/80 dark:bg-[#223028] text-[#3D4D45] dark:text-[#E8EFEA] hover:bg-[#8FA479]/15 dark:hover:bg-white/10 border border-[#3D4D45]/10 dark:border-white/10'
               }`}
               aria-pressed={isSelected}
             >
